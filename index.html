@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en"> <!-- 默认英文 -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSU-JPG Lab | Vision-centric MLLM</title>
+    <meta name="description" content="CSU-JPG Lab — Vision-centric MLLM · Long-text visual generation & understanding." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html { scroll-behavior: smooth; }
+
+  /* === 主题变量（亮/暗）=== */
+  :root{
+    --surface: #ffffff;              /* 普通卡片/面板 */
+    --surface-muted: #f9fafb;        /* 更柔的背景 */
+    --surface-sticky: rgba(248,250,252,.85); /* 吸顶条(亮) */
+    --border: #e5e7eb;
+  }
+  .dark{
+    --surface: #0b0b0b;
+    --surface-muted: #0f0f0f;
+    --surface-sticky: rgba(10,10,10,.60);   /* 吸顶条(暗) */
+    --border: #262626;
+  }
+
+  /* === 主题辅助类（配合 Tailwind）=== */
+  .surface           { background: var(--surface); }
+  .surface-muted     { background: var(--surface-muted); }
+  .surface-sticky    { background: var(--surface-sticky); backdrop-filter: blur(8px); }
+  .border-theme      { border-color: var(--border); }
+
+      /* ---- subtle reveal animation ---- */
+      .reveal { opacity: 0; transform: translateY(12px); transition: all .6s ease; }
+      .reveal.in { opacity: 1; transform: translateY(0); }
+      /* ---- card gentle tilt ---- */
+      .tilt { transform: perspective(800px) rotateX(0) rotateY(0); transition: transform .2s ease; }
+      .tilt:hover { transform: perspective(800px) rotateX(1.5deg) rotateY(-1.5deg) translateY(-2px); }
+      /* ---- animated gradient backdrop for hero ---- */
+      .grad {
+        background: radial-gradient(1200px 400px at 20% -10%, rgba(59,130,246,.15), transparent 60%),
+                    radial-gradient(1200px 400px at 80% -10%, rgba(16,185,129,.14), transparent 60%);
+        animation: floaty 12s ease-in-out infinite alternate;
+      }
+      @keyframes floaty {
+        0% { background-position: 20% -10%, 80% -10%; }
+        100% { background-position: 15% -6%, 85% -6%; }
+      }
+      /* ---- scroll progress bar ---- */
+      #progress { position: fixed; inset: 0 auto auto 0; height: 3px; width: 0; background: linear-gradient(90deg,#3b82f6,#10b981); z-index: 60; transition: width .1s linear; }
+      /* dark mode helpers */
+      .dark body { background-color: #0a0a0a; color: #e5e5e5; }
+      .dark .card { background-color: #0f0f0f; border-color: #262626; }
+      .dark .muted { color: #9ca3af; }
+    </style>
+  </head>
+  <body class="bg-white text-neutral-900">
+    <div id="progress"></div>
+    <div id="root"><noscript>Please enable JavaScript to view this site.</noscript></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-presets="env,react">
+      function safeMount(fn){ try { fn(); } catch(e){ console.error('[MountError]', e); } }
+      function whenReady(cb){ if (document.readyState==='complete'||document.readyState==='interactive'){cb();} else document.addEventListener('DOMContentLoaded',cb,{once:true}); }
+
+      whenReady(()=>safeMount(()=>{
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // ================= i18n =================
+        const I18N = {
+          en: {
+            nav: [{id:'home',label:'Home'},{id:'research',label:'Research'},{id:'news',label:'News'},{id:'publications',label:'Publications'},{id:'datasets',label:'Datasets'},{id:'people',label:'People'},{id:'graduates',label:'Graduated Students'},{id:'openings',label:'Openings'},{id:'blog',label:'Blog'},{id:'contact',label:'Contact'}],
+            title_home:'CSU-JPG Lab',
+            title_graduates:'Graduated Students',
+            intro:'We focus on Vision-centric Multimodal Large Language Models (MLLMs) and Data-centric AI: vision-language pretraining, interleaved long context, long-text image generation & understanding.',
+            hero_kpi:[{label:'Publications',key:'papers'},{label:'Open Datasets',key:'datasets'},{label:'Core Members',key:'members'}],
+            title_research:'Research', title_news:'News', title_publications:'Publications', title_datasets:'Datasets', title_people:'People', title_openings:'Openings', title_blog:'Blog', title_contact:'Contact',
+            search_placeholder:'Search title/authors/venue…', filter_all:'All', total_fmt:n=>`Total ${n} items`,
+            card_homepage:'Homepage', contact_addr_label:'Address', contact_addr:'School of Computer Science, Central South University · CSU-JPG Lab',
+            contact_email_label:'Email', contact_social_label:'Social', footer:y=>`© ${y} CSU-JPG Lab.`,
+            lang_toggle_en:'EN', lang_toggle_zh:'中文',
+            blog_card_title:'Stories: People See Text, But LLM Not',
+            blog_card_desc:'Published on 2025-10-21 · Our exploration of the gap between human and LLM visual perception of text',
+            clear:'Clear', copy:'Copy', copied:'Copied!'
+          },
+          zh: {
+            nav: [{id:'home',label:'主页'},{id:'research',label:'研究方向'},{id:'news',label:'新闻'},{id:'publications',label:'论文'},{id:'datasets',label:'数据集 / Benchmark'},{id:'people',label:'成员'},{id:'graduates',label:'毕业学生'},{id:'openings',label:'招生/招聘'},{id:'blog',label:'Blog'},{id:'contact',label:'联系'}],
+            title_home:'CSU-JPG 实验室',
+            title_graduates:'毕业学生',
+            intro:'我们专注于以视觉为中心的多模态大模型（Vision-centric MLLM）与数据中心 AI：视觉-语言预训练、Interleaved 长上下文、长文本图像生成与理解、OR 推理。',
+            hero_kpi:[{label:'论文',key:'papers'},{label:'开放数据/基准',key:'datasets'},{label:'核心成员',key:'members'}],
+            title_research:'研究方向', title_news:'新闻', title_publications:'论文', title_datasets:'数据集 / Benchmark', title_people:'成员', title_openings:'招生/招聘', title_blog:'Blog', title_contact:'联系',
+            search_placeholder:'搜索标题/作者/会议…', filter_all:'全部', total_fmt:n=>`共 ${n} 篇`,
+            card_homepage:'主页 / Homepage', contact_addr_label:'地址', contact_addr:'中南大学 · 计算机学院 · CSU-JPG 实验室',
+            contact_email_label:'邮箱', contact_social_label:'社交', footer:y=>`© ${y} CSU-JPG Lab.`,
+            lang_toggle_en:'EN', lang_toggle_zh:'中文',
+            blog_card_title:'Stories：People See Text, But LLM Not',
+            blog_card_desc:'发布于 2025-10-21 · 我们探索人类与 LLM 在文本视觉感知上的差距',
+            clear:'清除', copy:'复制', copied:'已复制'
+          }
+        };
+        const LS_LANG = 'csujpg_lang';
+        const LS_THEME = 'csujpg_theme'; // 'light' | 'dark'
+
+        function useLang(){
+          const persisted = localStorage.getItem(LS_LANG) || 'en';
+          const [lang,setLang] = useState(persisted);
+          useEffect(()=>{
+            localStorage.setItem(LS_LANG, lang);
+            document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+          },[lang]);
+          return [lang,setLang];
+        }
+        function useTheme(){
+          const persisted = localStorage.getItem(LS_THEME) || 'light';
+          const [theme,setTheme] = useState(persisted);
+          useEffect(()=>{
+            localStorage.setItem(LS_THEME, theme);
+            document.documentElement.classList.toggle('dark', theme==='dark');
+          },[theme]);
+          return [theme,setTheme];
+        }
+
+        // ================= 数据 =================
+        const research = [
+          { title_en:'Vision-centric Multimodal Large Language Models (MLLM)', title_zh:'以视觉为中心的多模态大模型 (Vision-centric MLLM)', href:'#blog',
+            desc_en:'Vision-first unification, interleaved long context.',
+            desc_zh:'视觉为先的统一建模、interleaved 长上下文。', tags:['Vision-centric','Interleaved']},
+          { title_en:'Data-centric AI', title_zh:'Data-centric AI', href:'#datasets',
+            desc_en:'Large-scale data curation, human-in-the-loop evaluation, automated benchmarks for layout/long-text.',
+            desc_zh:'大规模数据构建与治理、人机协同评测与自动化 benchmark、长文本渲染与布局理解评测框架。', tags:['Data-centric','Benchmark','Evaluation']},
+          { title_en:'Generation & Understanding', title_zh:'生成与理解', href:'#research-systems',
+            desc_en:'Long-text image generation, tokenizer, long-text rendering, cross-modal retrieval & reasoning.',
+            desc_zh:'长文本图像生成、tokenizer、长文本渲染、跨模态检索与推理、操作研究(OR)过程监督。', tags:['Long-text Image Generation','Tokenizer','Long-text Rendering','Cross-modal Retrieval','OR Process Supervision']},
+        ];
+
+        const publications = [
+          {year:2025,title:'Glance: One Sample Distillation Model',venue:'arXiv 2025',authors:'Zhuobai Dong, Rui Zhao, Songjie Wu, Junchao Yi, Linjie Li, Zhengyuan Yang, Lijuan Wang, Alex Jinpeng Wang*',link:'https://zhuobaidong.github.io/Glance/',img:'https://csu-jpg.github.io/paper_figures/glance.png'},
+          {year:2025,title:'VCode: a Multimodal Coding Benchmark with SVG as Symbolic Visual Representation',venue:'arXiv 2025',authors:'Kevin Qinghong Lin, Yuhao Zheng, Hangyu Ran, Dantong Zhu, Dongxing Mao, Linjie Li, Philip Torr, Alex Jinpeng Wang*',link:'https://csu-jpg.github.io/VCode/',img:'https://csu-jpg.github.io/paper_figures/codevqa.png'},
+          {year:2025,title:'SEE THE TEXT: FROM TOKENIZATION TO VISUAL READING',venue:'arXiv 2025',authors:'Ling Xing, Alex Jinpeng Wang*, Rui Yan, Hongyu Qu, Zechao Li, Jinhui Tang',link:'https://arxiv.org/pdf/2510.18840',img:'https://csu-jpg.github.io/paper_figures/seetok.png'},
+          {year:2025,title:'Chart2Code: From charts to code: a hierarchical benchmark for multimodal models',venue:'arXiv 2025',authors:'Jiahao Tang, Henry Hengyuan Zhao, Lijian Wu, Yifei Tao, Dongxing Mao, Yang Wan, Jingru Tan, Min Zeng, Min Li, Alex Jinpeng Wang*',link:'https://csu-jpg.github.io/Chart2Code.github.io/',img:'https://csu-jpg.github.io/paper_figures/chart2code.png'},
+          {year:2025,title:'Vision-centric Token Compression in Large Language Model',venue:'NeurIPS 2025 Spotlight (CCF-A, Top-tier)',authors:'Ling Xing, Alex Jinpeng Wang*, Rui Yan, Xiangbo Shu, Jinhui Tang',link:'https://arxiv.org/abs/2502.00791',img:'https://csu-jpg.github.io/paper_figures/vist.png'},
+          {year:2025,title:'VaporTok: RL-Driven Adaptive Video Tokenizer with Prior & Task Awareness',venue:'NeurIPS 2025 (CCF-A, Top-tier)',authors:'Minghao Yang, Zechen Bai, Jing Lin, Haoqian Wang, Alex Jinpeng Wang*',link:'https://arxiv.org/abs/2506.08104',img:'https://csu-jpg.github.io/paper_figures/vaportok.png'},
+          {year:2025,title:'Visual Thoughts: A Unified Perspective of Understanding Multimodal Chain-of-Thought',venue:'NeurIPS 2025 (CCF-A, Top-tier)',authors:'Zihui Cheng, Qiguang Chen, Xiao Xu, Jiaqi Wang, Weiyun Wang, Hao Fei, Yidong Wang, Alex Jinpeng Wang*, Zhi Chen, Wanxiang Che, Libo Qin',link:'https://arxiv.org/abs/2505.15510',img:'https://csu-jpg.github.io/paper_figures/visual_thought.png'},
+          {year:2025,title:'Unlearning the Noisy Correspondence Makes CLIP More Robust',venue:'ICCV 2025 (CCF-A, Top-tier)',authors:'Haochen Han, Alex Jinpeng Wang*, Peijun Ye, Fangming Liu',link:'https://arxiv.org/abs/2507.03434',img:'https://csu-jpg.github.io/paper_figures/unlearning.png'},
+          {year:2025,title:'Beyond Words: Advancing Long-Text Image Generation via Multimodal Autoregressive Models',venue:'arXiv 2025',authors:'Alex Jinpeng Wang*, Linjie Li, Zhengyuan Yang, Lijuan Wang, Min Li',link:'https://arxiv.org/abs/2503.20198',img:'https://fingerrec.github.io/index_files/jinpeng/papers/longtextar2025/main_ppl.png'},
+          {year:2025,title:'TextAtlas5M: A Large-scale Dataset for Dense Text Image Generation',venue:'arXiv 2025',authors:'Alex Jinpeng Wang*, Dongxing Mao, Jiawei Zhang, Weiming Han, Zhuobai Dong, Linjie Li, Yiqi Lin, Zhengyuan Yang, Libo Qin, Fuwei Zhang, Lijuan Wang, Min Li',link:'https://textatlas5m.github.io/',img:'https://fingerrec.github.io/index_files/jinpeng/papers/TEXTATLAS5M2025/intro.png'},
+          {year:2024,title:'Leveraging Visual Tokens for Extended Text Contexts in Multi-Modal Learning',venue:'NeurIPS 2024 (CCF-A, Top-tier)',authors:'Alex Jinpeng Wang*, Linjie Li, Yiqi Lin, Min Li, Lijuan Wang, Mike Zheng Shou',link:'https://arxiv.org/abs/2406.02547',img:'https://fingerrec.github.io/index_files/jinpeng/papers/ARXIV2024/motivation.png'}
+        ];
+
+        const datasets = [
+          { name:'TextAtlas5M', brief_en:'A large-scale dense text image dataset with training split and TextAtlasEval benchmark.', brief_zh:'大规模密集文本图像生成数据集，含训练集与 TextAtlasEval 测试基准', link:'https://textatlas5m.github.io/' },
+          { name:'Howto-Interlink7M', brief_en:'High-quality interleaved video–text dataset for cross-segment context.', brief_zh:'首个高质量 interleaved 视频-文本数据集，增强跨片段上下文', link:'https://arxiv.org/abs/2401.00849' },
+          { name:'V-MAGE', brief_en:'Game-based visual intelligence benchmark with vision-only gameplay, extensible evaluation and adaptive Elo ranking.', brief_zh:'基于游戏的视觉智能评测：纯视觉输入、可扩展评测框架与自适应 Elo 排名。', link:'https://github.com/CSU-JPG/V-MAGE' },
+          { name:'MVPBench', brief_en:'Graph-based evaluation of multi-path visual physical chain-of-thought reasoning with multi-image inputs.', brief_zh:'面向多路径视觉物理链式推理的图结构评测，支持多图输入。', link:'https://github.com/CSU-JPG/MVPBench' },
+          { name:'Chart2Code', brief_en:'A new benchmark designed to evaluate chart generation capabilities of LMMs under progressively challenging conditions. ', brief_zh:'一个新基准，用于评估 LMM 在 progressively challenging 条件下的图表生成能力。', link:'https://csu-jpg.github.io/Chart2Code.github.io/' }
+        ];
+
+        const people = [
+          {name:'Alex Jinpeng Wang (王金鹏)',role_en:'PI / Tenure-track Professor, CSU',role_zh:'PI / CSU 计算机学院 · Tenure-track Professor',url:'https://fingerrec.github.io',avatar:'https://fingerrec.github.io/index_files/jinpeng/my_photo_2.jpg'},
+          {name:'Dongxing Mao',role_en:'RA',role_zh:'RA',url:'https://scholar.google.com/citations?user=RLVSYY0AAAAJ&hl=en',avatar:'https://csu-jpg.github.io/person_figures/dongxing_mao.jpg'},
+          {name:'Jiahao Tang',role_en:'RA',role_zh:'RA',url:'https://github.com/accebet',avatar:'https://csu-jpg.github.io/person_figures/jiahao_tang.jpg'},
+          {name:'Songjie Wu',role_en:'Master',role_zh:'Master',url:'https://songjiewu1.github.io/',avatar:'https://csu-jpg.github.io/person_figures/songjie_wu.jpg'},
+          {name:'Suyang Hou',role_en:'Master',role_zh:'Master',url:'github.com/SuyangLumiere',avatar:'https://csu-jpg.github.io/person_figures/suyang_hou.jpg'}
+        ];
+
+        // 自动计算统计数据（从数组长度获取）
+        const STATS = { 
+          papers: publications.length, 
+          datasets: datasets.length, 
+          members: people.length 
+        };
+
+        const graduate_students = [
+          {name:'Zhuo Bai',role_en:'Undergraduate Student',role_zh:'本科生',url:'https://zhuobaidong.github.io/',avatar:'https://csu-jpg.github.io/person_figures/zhuobai.jpg'},
+        ];
+
+        const news = [
+          {date:'2025-12', text_en:'We released " Glance: One Sample Distillation Model", see https://glance.github.io/ for details.', text_zh:'我们发布了 Glance: One Sample Distillation Model，详情见 <a href="https://zhuobaidong.github.io/Glance/">Website</a> 。'},
+          {date:'2025-11', text_en:'Two papers accepted to AAAI 2026', text_zh:'两篇论文被 AAAI 2026 接收。'},
+          {date:'2025-11', text_en:'We released "VCode: a Multimodal Coding Benchmark with SVG as Symbolic Visual Representation", see https://csu-jpg.github.io/VCode/ for details.', text_zh:'我们发布了 VCode: a Multimodal Coding Benchmark with SVG as Symbolic Visual Representation，详情见 <a href="https://vcode.github.io/">Website</a> 。'},
+          {date:'2025-10', text_en:'We released "SEE THE TEXT: FROM TOKENIZATION TO VISUAL READING", see https://arxiv.org/pdf/2510.18840 for details.', text_zh:'我们发布了 SEE THE TEXT: FROM TOKENIZATION TO VISUAL READING，详情见 <a href="https://arxiv.org/pdf/2510.18840">ArXiv</a> 。'},
+          {date:'2025-10', text_en:'We released "From charts to code: a hierarchical benchmark for multimodal models", see https://csu-jpg.github.io/Chart2Code.github.io for details.', text_zh:'我们发布了 “从图表到代码：多模态模型的分层基准”，详情见 <a href="https://csu-jpg.github.io/Chart2Code.github.io/">Website</a> 。'},
+          {date:'2025-09', text_en:'Three papers accepted to NeurIPS 2025 (including one Spotlight).', text_zh:'3篇论文被 NeurIPS接收 2025（含 1Spotlight）。'},
+          {date:'2025-04', text_en:'One paper accepted to ICCV 2025.', text_zh:'1篇论文被ICCV2025接收。'},
+          {date:'2025-02', text_en:'Released TextAtlas5M and LongTextAR.', text_zh:'发布 TextAtlas5M 与 LongTextAR 模型。'},
+          {date:'2025-01', text_en:'CSU-JPG Lab Established', text_zh:'CSU-JPG Lab 成立了。'}
+        ];
+
+        const openings = [{ title_en:'Fall 2026 PhD Admissions & RA', title_zh:'2026秋博士招生 & RA',
+          body_en:'We are recruiting PHD/RA/Undergrad RAs/Interns in Vision-centric MLLM, long-text rendering, unified generation and understanding.',
+          body_zh:'我们招收博士/RA/本科生科研助理/实习生，方向含 Vision-centric MLLM、长文本渲染、统一生成与理解。',
+          contact_en:'Send CV to: jinpengwang@csu.edu.cn (subject includes [Application])',
+          contact_zh:'请发送简历至: jinpengwang@csu.edu.cn (标题包含【应聘】)'}];
+
+        // ===== utils =====
+        function deriveThumb(link){ try{const u=new URL(link); if(u.hostname.includes('arxiv.org')) return 'https://upload.wikimedia.org/wikipedia/commons/9/95/ArXiv_logo_2022.svg';}catch(e){} return ''; }
+        function runTests(){ const results=[]; results.push({name:'publications length', pass:Array.isArray(publications)&&publications.length>0}); results.push({name:'thumbs fallback ok', pass:publications.filter(p=>(p.link||'').includes('arxiv.org')).every(p=>!!(p.img||deriveThumb(p.link)))}); console.table(results); }
+        const pick = (it, key, lang) => it[`${key}_${lang}`] ?? it[`${key}_en`] ?? it[`${key}_zh`] ?? it[key];
+
+        // ===== Icons =====
+        const GitHubIcon = ({className="h-5 w-5"}) => (
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className={className}>
+            <path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+            0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+            -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64
+            -.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.62 7.62 0
+            012.01-.27c.68 0 1.36.09 2.01.27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
+            1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01
+            8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        );
+        const HFIcon = ({className="h-5 w-5"}) => (
+        //   <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+        //     <circle cx="32" cy="28" r="14" fill="currentColor" opacity="0.12"></circle>
+        //     <circle cx="26" cy="26" r="2" fill="currentColor" stroke="none"></circle>
+        //     <circle cx="38" cy="26" r="2" fill="currentColor" stroke="none"></circle>
+        //     <path d="M24 33c2.5 2.5 13.5 2.5 16 0" strokeLinecap="round"/>
+        //     <path d="M18 42c-3 0-6 2-6 5s2.5 5 5.5 5H26" strokeLinecap="round"/>
+        //     <path d="M46 42c3 0 6 2 6 5s-2.5 5-5.5 5H38" strokeLinecap="round"/>
+        //   </svg>
+
+          
+        <img
+        src="https://csu-jpg.github.io/public/assets/hf_face.png"
+        alt="Hugging Face"
+        className="h-5 w-5"
+        />
+        );
+
+        // ===== small hooks =====
+        const useReveal = () => {
+          useEffect(()=>{
+            const io = new IntersectionObserver((ents)=>{
+              ents.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+            }, {threshold: .12});
+            document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+            return ()=>io.disconnect();
+          },[]);
+        };
+
+
+        // 把裸 URL 自动变成可点击的 <a> 链接
+        function autoLink(s){
+          const re = /(https?:\/\/[^\s<>"')]+)(\)?)/g; // 容忍末尾右括号
+          return s.replace(re, (m, url, tail) => {
+            return `<a href="${url}" target="_blank" rel="noreferrer" class="text-blue-700 hover:underline">${url}</a>${tail||''}`;
+          });
+        }
+        // 如果已有 <a> 就直接用；否则做自动链接
+        function asHTML(s){
+          return s && s.includes('<a') ? s : autoLink(s||'');
+        }
+
+
+        function Logo(){ return (
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-black text-white shadow"><span className="text-lg font-bold">J</span></span>
+            <div><div className="font-bold">CSU-JPG Lab</div><div className="text-xs text-neutral-500 muted">Vision-centric Multimodal Intelligence</div></div>
+          </div>
+        );}
+        const Section=({id,title,children})=>(<section id={id} className="scroll-mt-24 py-16 reveal"><h2 className="text-2xl md:text-3xl font-bold mb-6">{title}</h2>{children}</section>);
+        const Card=({children, className=''})=>(<div className={`card rounded-2xl border border-theme surface p-5 shadow-sm tilt ${className}`}>{children}</div>);
+
+        function LabSite(){
+          const [lang,setLang] = useLang();
+          const [theme,setTheme] = useTheme();
+          const T = I18N[lang];
+          const searchRef = useRef(null);
+          useReveal();
+
+          // scroll progress
+          useEffect(()=>{
+            const bar = document.getElementById('progress');
+            const onScroll = ()=> {
+              const h = document.documentElement;
+              const max = h.scrollHeight - h.clientHeight;
+              bar.style.width = `${(h.scrollTop / Math.max(1,max))*100}%`;
+            };
+            onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+            return ()=>window.removeEventListener('scroll', onScroll);
+          },[]);
+
+          // publications filter
+          const [pubQuery,setPubQuery] = useState('');
+          const [pubYear,setPubYear] = useState('All');
+          const years = useMemo(()=>['All', ...Array.from(new Set(publications.map(p=>p.year))).sort((a,b)=>b-a)],[]);
+          const pubFiltered = useMemo(()=>{
+            const q = pubQuery.trim().toLowerCase();
+            return publications.filter(p=>{
+              const okYear = pubYear==='All' || p.year===pubYear;
+              const hay = [p.title,p.venue,p.authors].join(' ').toLowerCase();
+              const okQ = !q || hay.includes(q);
+              return okYear && okQ;
+            });
+          },[pubQuery,pubYear]);
+
+          // arXiv thumbs fallback
+          useEffect(()=>{ publications.forEach(p=>{ if(!p.img){ const t=deriveThumb(p.link||''); if(t) p.img=t; } }); runTests(); },[]);
+
+          // back-to-top button
+          const [showTop,setShowTop] = useState(false);
+          useEffect(()=>{
+            const onScroll = ()=> setShowTop(window.scrollY>600);
+            onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+            return ()=>window.removeEventListener('scroll', onScroll);
+          },[]);
+
+          // ===== KPI 计数动画（修复版：state + 可见时触发）=====
+          const [kpi, setKpi] = useState({papers:0,datasets:0,members:0});
+          const kpiRef = useRef(null);
+          useEffect(()=>{
+            const el = kpiRef.current;
+            if(!el) return;
+            const io = new IntersectionObserver((ents)=>{
+              if(ents[0].isIntersecting){
+                const start = performance.now(); const dur = 1200;
+                const from = {papers:0,datasets:0,members:0};
+                const to = STATS;
+                const step = (t)=>{
+                  const p = Math.min(1, (t-start)/dur);
+                  setKpi({
+                    papers: Math.floor(from.papers + (to.papers-from.papers)*p),
+                    datasets: Math.floor(from.datasets + (to.datasets-from.datasets)*p),
+                    members: Math.floor(from.members + (to.members-from.members)*p),
+                  });
+                  if(p<1) requestAnimationFrame(step);
+                };
+                requestAnimationFrame(step);
+                io.disconnect();
+              }
+            },{threshold:.3});
+            io.observe(el);
+            return ()=>io.disconnect();
+          },[]);
+
+          return (
+            <div>
+              {/* Header */}
+              <header className="sticky top-0 z-40 border-b border-theme surface-sticky">
+                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                  <a href="#home"><Logo/></a>
+                  <nav className="hidden md:flex items-center gap-6 text-sm">
+                    {T.nav.map(n=>(<a key={n.id} href={`#${n.id}`} className="hover:opacity-70">{n.label}</a>))}
+                  </nav>
+                  <div className="flex items-center gap-2 text-sm">
+                    <button onClick={()=>setLang('en')} className={`px-2 py-1 rounded ${lang==='en'?'bg-black text-white':'hover:bg-neutral-100'}`}>{T.lang_toggle_en}</button>
+                    <span className="text-neutral-300">|</span>
+                    <button onClick={()=>setLang('zh')} className={`px-2 py-1 rounded ${lang==='zh'?'bg-black text-white':'hover:bg-neutral-100'}`}>{T.lang_toggle_zh}</button>
+                    <div className="w-px h-4 bg-neutral-200 mx-1"></div>
+                    <button onClick={()=>setTheme(theme==='dark'?'light':'dark')} className="px-2 py-1 rounded hover:bg-neutral-100" aria-label="Toggle theme">
+                      {theme==='dark' ? '🌙' : '☀️'}
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              {/* Main */}
+              <main className="max-w-7xl mx-auto px-4">
+                {/* Hero */}
+                <section id="home" className="scroll-mt-24 pt-12 reveal">
+                  <div className="rounded-3xl border border-theme card overflow-hidden grad">
+                    <div className="p-8 md:p-12">
+                      <h1 className="text-3xl md:text-4xl font-extrabold">{T.title_home}</h1>
+                      <p className="mt-3 text-lg muted">{T.intro}</p>
+
+                      
+
+             {/* 社交 + KPI 合并为一行 */}
+<div ref={kpiRef} className="mt-6 flex flex-wrap items-center gap-3 md:gap-4">
+  {/* 社交按钮 */}
+  <a href="https://github.com/CSU-JPG" target="_blank" rel="noreferrer"
+     className="inline-flex items-center gap-2 rounded-xl border border-theme surface px-3 py-2 text-sm hover:opacity-90">
+    <GitHubIcon className="h-5 w-5"/>
+    <span>CSU-JPG</span>
+  </a>
+  <a href="https://huggingface.co/CSU-JPG" target="_blank" rel="noreferrer"
+     className="inline-flex items-center gap-2 rounded-xl border border-theme surface px-3 py-2 text-sm hover:opacity-90">
+    <HFIcon className="h-5 w-5"/>
+    <span>Hugging Face</span>
+  </a>
+
+  {/* 分隔线（可选） */}
+  <span className="hidden md:inline-block h-5 w-px bg-neutral-200 mx-1" />
+
+  {/* KPI 小卡片（同一行内流动，窄屏会自动换行） */}
+  {[{label:T.hero_kpi[0].label,key:'papers'},
+    {label:T.hero_kpi[1].label,key:'datasets'},
+    {label:T.hero_kpi[2].label,key:'members'}].map((it,i)=>(
+    <div key={i} className="rounded-2xl border border-theme card px-4 py-2.5 text-center inline-flex flex-col items-center">
+      <div className="text-2xl font-extrabold leading-none">{kpi[it.key]}</div>
+      <div className="text-[11px] muted mt-1">{it.label}</div>
+    </div>
+  ))}
+</div>
+
+                    </div>
+                  </div>
+                </section>
+
+                {/* Research */}
+                <Section id="research" title={T.title_research}>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {research.map((r,i)=>(
+                      <Card key={i}>
+                        <a href={r.href} className="text-lg font-semibold text-blue-700 hover:underline">{pick(r,'title',lang)}</a>
+                        <p className="mt-2 text-sm muted">{pick(r,'desc',lang)}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {r.tags.map((t,j)=>(<span key={j} className="text-xs rounded-lg border border-theme px-2 py-1">{t}</span>))}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+                {/* News */}
+                <Section id="news" title={T.title_news}>
+                  <div className="grid gap-4">
+                    {news.map((n,i)=>(
+  <Card key={i}>
+    <div
+      className="text-sm muted"
+      dangerouslySetInnerHTML={{ __html: `${n.date} · ${asHTML(pick(n,'text',lang))}` }}
+    />
+  </Card>
+))}
+
+                  </div>
+                </Section>
+
+                {/* Publications */}
+                <Section id="publications" title={T.title_publications}>
+                  {/* sticky filters */}
+                  <div className="sticky top-16 z-30 surface-sticky border-b border-theme mb-4">
+                    <div className="py-3 flex flex-wrap items-center gap-3">
+                      <div className="relative">
+                        <input ref={searchRef} placeholder={T.search_placeholder} value={pubQuery} onChange={e=>setPubQuery(e.target.value)} className="w-72 rounded border px-3 py-2 text-sm"/>
+                        {pubQuery && <button onClick={()=>setPubQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs hover:opacity-70">{T.clear}</button>}
+                      </div>
+                      <select value={pubYear} onChange={e=>setPubYear(e.target.value==='All'?'All':Number(e.target.value))} className="w-32 rounded border px-3 py-2 text-sm">
+                        {['All', ...Array.from(new Set(publications.map(p=>p.year))).sort((a,b)=>b-a)].map((y,i)=>(<option key={i}>{y}</option>))}
+                      </select>
+                      <span className="text-xs muted">{T.total_fmt(pubFiltered.length)}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {pubFiltered.map((p,i)=>(
+                      <Card key={i}>
+                        <div className="flex items-start gap-4">
+                          {p.img ? (<img src={p.img} alt={p.title} loading="lazy" className="h-16 w-28 rounded border object-cover flex-none"/>) :
+                            (<div className="h-16 w-28 rounded border bg-neutral-100 flex items-center justify-center text-xs text-neutral-500 flex-none">No Image</div>)}
+                          <div>
+                            <a href={p.link} target="_blank" className="font-semibold text-blue-700 hover:underline">{p.title}</a>
+                            <div className="text-sm muted mt-1">{p.authors} · {p.venue} · {p.year}</div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+                {/* Datasets */}
+                <Section id="datasets" title={T.title_datasets}>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {datasets.map((d,i)=>(
+                      <Card key={i}>
+                        <div className="font-semibold">{d.name}</div>
+                        <div className="text-sm muted mt-1">{pick(d,'brief',lang)}</div>
+                        <a href={d.link} className="text-blue-700 hover:underline text-sm mt-2 inline-block" target="_blank" rel="noreferrer">{d.link}</a>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+                {/* People */}
+                <Section id="people" title={T.title_people}>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {people.map((p,i)=>(
+                      <Card key={i}>
+                        <div className="flex items-center gap-3">
+                          {p.avatar ? (<img src={p.avatar} alt={p.name} className="h-12 w-12 rounded-full object-cover border"/>) :
+                            (<div className="h-12 w-12 rounded-full border bg-neutral-100 flex items-center justify-center text-sm font-semibold">{p.name[0]}</div>)}
+                          <div>
+                            <div className="font-semibold">{p.name}</div>
+                            <div className="text-sm muted">{pick(p,'role',lang)}</div>
+                            {p.url && <a href={p.url} target="_blank" className="text-xs text-blue-700 hover:underline mt-1 inline-block">{T.card_homepage}</a>}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+
+                {/* Graduated Students */}
+                <Section id="graduates" title={T.title_graduates}>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {graduate_students.map((p,i)=>(
+                      <Card key={i}>
+                        <div className="flex items-center gap-3">
+                          {p.avatar ? (<img src={p.avatar} alt={p.name} className="h-12 w-12 rounded-full object-cover border"/>) :
+                            (<div className="h-12 w-12 rounded-full border bg-neutral-100 flex items-center justify-center text-sm font-semibold">{p.name[0]}</div>)}
+                          <div>
+                            <div className="font-semibold">{p.name}</div>
+                            <div className="text-sm muted">{pick(p,'role',lang)}</div>
+                            {p.url && <a href={p.url} target="_blank" className="text-xs text-blue-700 hover:underline mt-1 inline-block">{T.card_homepage}</a>}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+                {/* Openings */}
+                <Section id="openings" title={T.title_openings}>
+                  <div className="grid gap-4">
+                    {openings.map((o,i)=>(
+                      <Card key={i}>
+                        <div className="font-semibold">{pick(o,'title',lang)}</div>
+                        <div className="text-sm muted mt-1">{pick(o,'body',lang)}</div>
+                        <div className="text-xs muted mt-1 flex items-center gap-2">
+                          {pick(o,'contact',lang)}
+                          <button className="px-2 py-0.5 rounded border hover:bg-neutral-100"
+                                  onClick={()=>{navigator.clipboard.writeText('jinpengwang@csu.edu.cn'); const btn=event.currentTarget; const txt=btn.textContent; btn.textContent=I18N[lang].copied; setTimeout(()=>btn.textContent=I18N[lang].copy,1000);}}>
+                            {I18N[lang].copy}
+                          </button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+
+                {/* Blog */}
+                <Section id="blog" title={T.title_blog}>
+                  <Card>
+                    <a href="https://csu-jpg.github.io/Blog/people_see_text.html" className="text-lg font-semibold text-blue-700 hover:underline">{T.blog_card_title}</a>
+                    <div className="text-sm muted mt-1">{T.blog_card_desc}</div>
+                  </Card>
+                </Section>
+
+                {/* Contact（社交链接已上移，避免重复） */}
+                <Section id="contact" title={T.title_contact}>
+                  <Card>
+                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                      <div><div className="font-semibold">{T.contact_addr_label}</div><div className="muted">{T.contact_addr}</div></div>
+                      <div><div className="font-semibold">{T.contact_email_label}</div><div>jinpengwang@csu.edu.cn</div></div>
+                      <div><div className="font-semibold">{T.contact_social_label}</div><div className="muted">—</div></div>
+                    </div>
+                  </Card>
+                </Section>
+              </main>
+
+              {/* Footer */}
+              <footer className="border-t border-theme py-10 text-center text-sm muted">
+                {T.footer(new Date().getFullYear())} <a href="https://csu-jpg.github.io" className="hover:underline">https://csu-jpg.github.io</a>
+              </footer>
+
+              {/* Back to Top FAB */}
+              {showTop && (
+                <button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}
+                        className="fixed bottom-6 right-6 rounded-full shadow-lg border bg-white px-4 py-2 hover:bg-neutral-100">
+                  ↑
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LabSite/>);
+      }));
+    </script>
+  </body>
+</html>

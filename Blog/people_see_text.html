@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en"> <!-- 初始化后会随本地存储切换 -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>People See Text, But LLM Not | CSU-JPG Lab Stories</title>
+    <meta name="description" content="People see text visually; LLMs tokenize. Why this gap matters, what visual tokens change, and where vision-centric MLLMs are heading." />
+    <meta property="og:title" content="People See Text, But LLM Not" />
+    <meta property="og:description" content="People read visually, not symbolically. Visual tokens and vision-centric MLLMs point to the next paradigm." />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🧠</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html{scroll-behavior:smooth}
+      .prose p{line-height:1.8}
+      .yt-wrap{position:relative;padding-top:56.25%}
+      .yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px}
+      figure img{background:#fff}
+      .lead{color:#525252}
+
+      /* === Markdown-like (GitHub-ish) reset for prose === */
+      .prose {
+        --tw-prose-body: #1f2937;       /* text-gray-800 */
+        --tw-prose-headings: #111827;   /* text-gray-900 */
+        --tw-prose-links: #2563eb;      /* blue-600 */
+        --tw-prose-bold: #111827;       /* darker bold */
+        --tw-prose-quotes: #374151;     /* gray-700 */
+        --tw-prose-counters: #6b7280;   /* gray-500 */
+        --tw-prose-bullets: #6b7280;    /* gray-500 */
+        --tw-prose-hr: #e5e7eb;         /* gray-200 */
+        --tw-prose-code: #111827;       /* text for code */
+        --tw-prose-th-borders: #e5e7eb;
+        --tw-prose-td-borders: #e5e7eb;
+      }
+      /* 标题更“粗”，不改变大小写 */
+      .prose h1, .prose h2, .prose h3,
+      .prose h4, .prose h5, .prose h6 {
+        text-transform: none;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      /* H1/H2 视觉节奏：H2 带下划线 */
+      .prose h1 { margin-top: 0.6em; margin-bottom: 0.3em; }
+      .prose h2 {
+        margin-top: 2.2em; margin-bottom: 0.8em;
+        padding-bottom: .3rem; border-bottom: 1px solid #e5e7eb;
+      }
+      .prose h3 { margin-top: 1.6em; margin-bottom: .6em; }
+
+      /* 链接更“蓝”，悬停下划线 */
+      .prose a { color: #2563eb; text-decoration: none; }
+      .prose a:hover { text-decoration: underline; color: #1d4ed8; }
+
+      /* 引用块：左线 + 浅底 + 圆角 */
+      .prose blockquote {
+        border-left: 4px solid #e5e7eb;
+        background: #f9fafb;
+        color: #4b5563;
+        padding: .75rem 1rem;
+        border-radius: .5rem;
+        margin: 1rem 0;
+        font-style: normal;
+      }
+
+      /* 粗体更黑一些 */
+      .prose strong { font-weight: 800; color: #111827; }
+
+      /* 行内代码：灰底+圆角 */
+      .prose :not(pre) > code {
+        background: #f3f4f6;
+        padding: .15rem .35rem;
+        border-radius: .25rem;
+        font-weight: 500;
+      }
+
+      /* 代码块（若文章后续添加代码） */
+      .prose pre {
+        background: #0b1220;
+        color: #e5e7eb;
+        border-radius: .6rem;
+        padding: 1rem;
+        border: 1px solid #111827;
+        overflow: auto;
+      }
+
+      /* 列表项目符号颜色更柔 */
+      .prose ul > li::marker,
+      .prose ol > li::marker { color: #6b7280; }
+
+      /* 图片：圆角+边框，像 MD 预览 */
+      .prose img {
+        border-radius: .75rem;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+      }
+
+      /* 图注更淡 */
+      .prose figure figcaption {
+        color: #6b7280;
+        font-size: .78rem;
+      }
+
+      /* 目录标题走同一风格 */
+      #toc .font-semibold { color:#111827; }
+    </style>
+  </head>
+  <body class="bg-white text-neutral-900">
+    <a id="top"></a>
+    <!-- ===== Header（仅一份） ===== -->
+    <header class="border-b border-neutral-200">
+      <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a id="homeLink" href="../" class="text-sm text-blue-700 hover:underline">← Home</a>
+        <div class="flex items-center gap-3">
+          <div id="pubdate" class="text-sm text-neutral-500">Published on 2025-10-21 · CSU-JPG Lab</div>
+          <div class="h-5 w-px bg-neutral-200"></div>
+          <div class="text-sm">
+            <button id="btnEN" class="px-2 py-1 rounded bg-black text-white">EN</button>
+            <span class="mx-1 text-neutral-300">|</span>
+            <button id="btnZH" class="px-2 py-1 rounded hover:bg-neutral-100">中文</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-10">
+      <!-- ===== 目录（自动生成） ===== -->
+      <nav id="toc" class="mt-2 text-sm"></nav>
+
+      <!-- ================= EN CONTENT ================= -->
+      <article id="content-en" data-lang="en" class="mt-6 prose prose-neutral md:prose-lg max-w-none">
+        <h1 class="!mb-2">People See Text, But LLM Not</h1>
+        <blockquote class="lead">
+          <i>“Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it deosn't mttaer in waht oredr the ltteers in a wrod are.”</i> — Davis, Matt (2012)
+        </blockquote>
+        <p>
+          You can probably read that sentence effortlessly. Despite the chaotic order of letters, your brain automatically reconstructs the intended words — because humans don’t read text letter by letter. We perceive shapes, patterns, and visual words.
+        </p>
+
+        <h2>1. See Text vs. LLM Process Text</h2>
+
+        <h3>1.1 The Visual Nature of Reading</h3>
+        <p>
+          Cognitive neuroscience has long shown that our brain recruits a specialized region called the <em>Visual Word Form Area</em> (VWFA) in the left occipitotemporal cortex.
+          This area recognizes entire word forms as visual objects, not symbolic sequences. That’s why humans can read “Cmabrigde” as Cambridge, or identify words in distorted fonts, mixed scripts, and complex layouts.
+        </p>
+
+                <!-- (1) human_brain.png -->
+                <figure class="mt-4">
+                  <img src="https://csu-jpg.github.io/Blog/figures/human_brain.png" alt="Visual Word Form Area: reading is visual">
+                  <figcaption class="mt-2 text-xs text-neutral-500">"The Science Behind LearningRx Reading Programs". </figcaption>
+                </figure>
+                The brain “sees” words: reading is vision, not just language processing.
+        <p><strong>In essence, people see text.</strong> Reading is vision — not just language processing.</p>
+
+        <h3>1.2 How LLMs Process Text (and Why It’s Different)</h3>
+        <p>
+          Large Language Models (LLMs), in contrast, do not “see” text. They tokenize it — breaking sentences into subword units like “vis”, “ion”, “cent”, “ric”.
+          Each token becomes an integer ID looked up in a vocabulary. This is efficient for symbolic computation, but it destroys the visual and structural continuity of language.
+          As a result, the holistic form of text is lost in translation. Humans can easily read “t3xt” as “text,” but token-based models treat them as unrelated sequences.
+        </p>
+
+        <h3>1.3 The Consequences of Tokenization</h3>
+        <ul>
+          <li><strong>Loss of visual semantics:</strong> Fonts, shapes, and layout cues disappear.</li>
+          <li><strong>Over-segmentation in multilingual text:</strong> Low-resource languages get fragmented into meaningless subwords.</li>
+          <li><strong>Inefficiency for long text:</strong> A few characters can turn into multiple tokens, inflating context length and cost.</li>
+        </ul>
+
+        <b>It is hard to process Interleaved Document  with tokenization: </b>
+
+        <!-- (2) dvq.png (放在分词后果示意) -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/dvq.png" alt="Discrete tokenization vs. visual perception">
+          <figcaption class="mt-2 text-xs text-neutral-500">Leonardo da Vinci’s Manuscripts</figcaption>
+        </figure>
+
+        <p>
+          This is why a model might read a paper or screenshot yet miss equations, tables, or captions — because they are treated as pixels, not text.
+        </p>
+
+        <h3>1.4 Text Widely Exists in Web Images</h3>
+        <p>
+          <strong>45%+</strong> web images contain text (e.g., in LAION-2B; Lin et al., Parrot, ECCV 2024). Documents, UI, charts, and designs are inherently <em>visual text</em>.
+        </p>
+      <!-- (3) parrot.png -->
+      <figure class="mt-6">
+        <img src="https://csu-jpg.github.io/Blog/figures/parrot.png" alt="Text prevalence in web images (Parrot)">
+        <figcaption class="mt-2 text-xs text-neutral-500">Text is ubiquitous in web images: documents, UI, charts, designs.</figcaption>
+      </figure>
+
+
+
+        <h2>2. Early Attempts: Making Models See Text / Unified Model</h2>
+        <p>Several early studies tried to bridge this gap by treating text as an image signal:</p>
+        <ul>
+          <li><strong>Visual Text Representations</strong> (Salesky et al., EMNLP 2021): The paper introduces visual text representations that replace discrete subword vocabularies with continuous embeddings derived from rendered text. This method matches traditional models in translation quality while being far more robust to noisy or corrupted input.</li>
+          <!-- (4) visual_text_representations.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/visual_text_repre.png" alt="visual text representations">
+            <figcaption class="mt-2 text-xs text-neutral-500">visual text representations</figcaption>
+          </figure>
+
+          <li><strong>PIXEL</strong> (Phillip et al., ICLR 2023): render text as images, pretrain ViT-MAE to reconstruct masked pixels, removing the tokenizer; robust to unseen scripts and orthographic perturbations.</li>
+               <!-- (4) pixel.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pixel.png" alt="PIXEL: render text as images, ViT-MAE pretraining">
+          <figcaption class="mt-2 text-xs text-neutral-500">PIXEL (ICLR’23): render text as images and pretrain with MAE.</figcaption>
+        </figure>
+          <li><strong>CLIPPO</strong> (Michael et al., CVPR 2023): unify image &amp; text under a single pixel-based encoder; text is rendered to images and trained with contrastive loss.</li>
+          <!-- (5) clippo.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/clippo.png" alt="CLIPPO pixel-only encoder">
+          <figcaption class="mt-2 text-xs text-neutral-500">CLIPPO (CVPR’23): a pixel-only encoder for image and text.</figcaption>
+        </figure>
+          <li><strong>Pix2Struct</strong> (Lee et al., ICML 2023): parse screenshots as structured visual input for document/layout understanding.</li>
+            <!-- (6) pix2struct.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pix2struct.png" alt="Pix2Struct for screenshot and layout understanding">
+          <figcaption class="mt-2 text-xs text-neutral-500">Pix2Struct (ICML’23): parse screenshots as structured visual input.</figcaption>
+        </figure>
+        <li><strong>PIXAR</strong>(Tai et al., ACL 2024): PIXAR is pixel-based autoregressive LLM capable of generating readable text, using adversarial pretraining to overcome MLE limitations and reach GPT-2-level performance.
+          .</li>
+        <!-- (8) pixar.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pixar.png" alt="PIXAR: a pre-training objective that leverages both visual and textual information to enhance model understanding.">
+          <figcaption class="mt-2 text-xs text-neutral-500">PIXAR (ACL’24): PIXAR is pixel-based autoregressive LLM capable of generating readable text, using adversarial pretraining to overcome MLE limitations and reach GPT-2-level performance.</figcaption>
+        </figure>
+          <li><strong>PTP</strong> (Gao et al., arXiv 2024): screenshot language models with a Patch-and-Text Prediction objective to reconstruct masked image patches and text jointly.</li>
+          <!-- (7) ptp.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/ptp.png" alt="PTP screenshot language models">
+            <figcaption class="mt-2 text-xs text-neutral-500">PTP (arXiv’24): joint patch-and-text prediction on screenshots.</figcaption>
+          </figure>
+
+          <!-- (6-2) fuyu.png -->
+         <b>Fuyu:</b>precess visual and textual information in a unified model.
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/fuyu.png" alt="Fuyu: precess visual and textual information in a unified model.">
+            <figcaption class="mt-2 text-xs text-neutral-500">Fuyu (arXiv 24'1): precess visual and textual information in a unified model.</figcaption>
+          </figure>
+
+          <li><strong>PEAP</strong> (Lyu et al., arXiv 2025'): a unified perception paradigm for agentic language models that interact directly with real-world environments combining visual and textual information.</li>
+          <!-- (7) ptp.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/peap.png" alt="PEAP: a unified perception paradigm for agentic language models that interact directly with real-world environments combining visual and textual information.">
+            <figcaption class="mt-2 text-xs text-neutral-500">PEAP (arXiv’25): a unified perception paradigm for agentic language models that interact directly with real-world environments combining visual and textual information.</figcaption>
+          </figure>
+        </ul>
+        <p>
+          
+          These works helped models <em>see</em> text, but left a <span style="color:#d32f2f; font-weight:bold;"><u>key question： what tangible benefit does transforming text into images actually provide?</u></span>
+        </p>
+
+        <h2>3. Recent Attempts: Visual Tokens for Long-Context Compression</h2>
+        <p><strong>Key observations:</strong></p>
+        <ul>
+          <li>1. Vision encoders are typically much smaller than LLMs (e.g., ~100M for ViT-B vs. 7B+ for LLaMA/Mistral).</li>
+          <li>2. CLIP-style pretraining yields emergent OCR-like abilities without explicit supervision.</li>
+          <li>3. Visual patches can encode dense textual content (more characters per spatial area), effectively extending context via <em>spatial compression</em>.</li>
+        </ul>
+        </br>
+        <p>
+          <span style="color:#d32f2f; font-weight:bold;">
+            Interleaved document-level multimodal pretraining is an ideal setup.
+          </span>
+          <br><strong>NeurIPS 2024 — “Leveraging Visual Tokens for Extended Text Contexts”:</strong> represent long text as compact visual tokens, enabling longer &amp; denser context at training and inference.
+          This improves in-context text length from <strong>256 → 2048</strong> during pretraining on NVIDIA H100.
+        </p>
+            <!-- (9) vis_in_context.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/vis_in_context.png" alt="Visual tokens for extended in-context learning">
+          <figcaption class="mt-2 text-xs text-neutral-500">Leveraging visual tokens for extended in-context understanding.</figcaption>
+        </figure>
+                <!-- (10) vis_in_context_h100.png -->
+                <figure class="mt-4">
+                  <img src="https://csu-jpg.github.io/Blog/figures/visual_in_context_h100.png" alt="H100 pretraining: text context 256→2048">
+                  <figcaption class="mt-2 text-xs text-neutral-500">On NVIDIA H100: in-context text length improved from 256 → 2048.</figcaption>
+                </figure>
+            </br>
+        <p>
+          <span style="color:#d32f2f; font-weight:bold;">
+            Long-text understanding in LLM is another ideal situation.
+          </span>
+          <br><strong>Xing et al., NeurIPS 2025 — “Vision-Centric Token Compression in Large Language Models” (VIST):</strong>
+          inspired by a human slow–fast reading circuit: a <em>fast</em> visualized path renders distant context as images for quick semantic extraction; a <em>slow</em> path feeds key text to LLM for deep reasoning.
+        </p>
+
+        <!-- (11) vist.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/vist.png" alt="VIST: vision-centric token compression in LLMs">
+          <figcaption class="mt-2 text-xs text-neutral-500">VIST (NeurIPS’25): fast visual path + slow language path.</figcaption>
+        </figure>
+        </br>
+
+
+        <span style="color:#d32f2f; font-weight:bold;">
+          Deepseek's answer: OCR.
+        </span>
+        <p>
+          <strong>DeepSeek-OCR (Oct 2025): Contextual Optical Compression</strong> extends visual-token compression to OCR:
+          compressing thousands of text tokens into a few hundred visual reps, reaching <strong>~97% OCR precision at ~10× compression</strong>.
+          DeepSeek-OCR was driven by <strong>powerful infrastructure</strong> and 
+          <strong>painstaking large-scale data preparation</strong>, enabling the model to scale visual–token compression far beyond prior works.
+        </p>
+        <!-- (12) deepseek_motivation.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/deepseek_motivation.png" alt="DeepSeek-OCR contextual optical compression">
+          <figcaption class="mt-2 text-xs text-neutral-500">DeepSeek-OCR: ~97% precision with ~10× compression.</figcaption>
+        </figure>
+        <p><em>The convergence of visual perception and language understanding is not a coincidence — it is the next paradigm shift.</em></p>
+
+
+        <h2>4. The Future Ahead: A Vision-centric MLLM</h2>
+      <p>
+        In a truly vision-centric multimodal language model, we may no longer need a traditional tokenizer.
+        The model could read text visually — as humans do — and even generate text as images, <b> <u>unifying perception and generation in the same visual space.</u> </b>
+      </p>
+      <span style="color:#d32f2f; font-weight:bold;"><u><b> Dense Text Image Generation:</b></u></span>
+      <p>
+        To reach that goal, we must perfect image-based text rendering and long-text visual generation:
+        <strong>TextAtlas5M</strong> provides large-scale dense text rendering where captions, documents, and designs are visually represented.
+            <!-- (13) textatlas_5m.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/text_atlas_5m.png" alt="TextAtlas5M dataset for dense text rendering">
+        <figcaption class="mt-2 text-xs text-neutral-500">TextAtlas5M: large-scale dense text rendering. Arxiv 25'2.</figcaption>
+      </figure>
+        <br><em>Beyond Words</em> aims to generate text-heavy, information-dense images from natural prompts, pushing multimodal autoregressive models toward true long-text visual generation.
+         <!-- (14) long_text_ar.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/long_text_ar.png" alt="Beyond Words: long-text visual generation">
+        <figcaption class="mt-2 text-xs text-neutral-500"><em>Beyond Words</em>: toward long-text visual generation. Arxiv 25'2.</figcaption>
+      </figure>
+      </p>
+
+      <span style="color:#d32f2f; font-weight:bold;"><u><b> More tasks in LLM:</b></u></span>
+      <p>
+        Xing et al, Arxiv25'10 - "SEE THE TEXT: FROM TOKENIZATION TO VISUAL READING", this work extend this idea to more tasks include Classification, and QA.
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/see_the_text.png" alt="See The Text">
+          <figcaption class="mt-2 text-xs text-neutral-500">See The Text (Arxiv25'10)</figcaption>
+        </figure>
+      </p>
+      
+        <h2>5. Toward the Next Generation of Vision-centric MLLM</h2>
+        <ul>
+          <li>Text is <strong>visual</strong>, not merely symbolic.</li>
+          <li>Vision is <strong>language</strong>, not separate.</li>
+          <li>Compression is <strong>perception</strong>, not just engineering.</li>
+        </ul>
+        <p>
+          The ultimate goal is a model that reads, writes, and sees text the way humans do — through the eyes of vision.
+          <br/><strong>People see text. Soon, LLMs &amp; LVMs will too.</strong>
+        </p>
+        <!-- <p>
+          We compiled a visual text paper list: See 
+          <a href="https://github.com/CSU-JPG/Awesome-Visual-Text" target="_blank" rel="noopener noreferrer">https://github.com/CSU-JPG/Awesome-Visual-Text</a>
+          for details.
+        </p> -->
+      </article>
+
+      <!-- ================= ZH CONTENT ================= -->
+      <article id="content-zh" data-lang="zh" class="mt-6 prose prose-neutral md:prose-lg max-w-none" hidden>
+        <h1 class="!mb-2">人能“看见”文字，但 LLM 却不能</h1>
+        <blockquote class="lead">
+          “Aoccdrnig to a rscheearch at Cmabrigde Uinervtisy, it deosn't mttaer in waht oredr the ltteers in a wrod are.” — Davis, Matt (2012)
+        </blockquote>
+        <p>
+          你大概率可以毫不费力地读懂这句话。虽然字母顺序被打乱，你的大脑仍能自动复原——因为人类阅读并不是逐字母解码，而是在看词形、结构与视觉模式。
+        </p>
+
+        <h2>1. 人“看见”文本 vs. LLM“处理”文本</h2>
+
+        <h3>1.1 阅读的视觉本质</h3>
+        <p>
+          认知神经科学表明：大脑在枕颞叶左侧的一个专门区域——<em>视觉词形区</em>（VWFA）参与阅读。
+          它把整个词当作视觉对象来识别，而非单纯的符号序列。因此我们能把“Cmabrigde”读成 Cambridge，也能在扭曲字体、混合书写系统、复杂版式中识别文字。
+        </p>
+
+          <!-- (1) human_brain.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/human_brain.png" alt="Visual Word Form Area: reading is visual">
+            <figcaption class="mt-2 text-xs text-neutral-500">"The Science Behind LearningRx Reading Programs". </figcaption>
+          </figure>
+
+        <p><strong>本质上，人类是在“看”文本。</strong> 阅读首先是视觉，而不仅是语言。</p>
+
+        <h3>1.2 LLM 如何处理文本（以及差异何在）</h3>
+        <p>
+          相比之下，大语言模型并不“看见”文本。它们先将文本 <em>分词</em> ——把句子打成“vis / ion / cent / ric”等子词单元；每个 token 映射为词表中的一个整数 ID。
+          这对符号计算很高效，但会破坏语言的视觉与结构连续性。
+          结果是，文本的整体形态在映射中丢失。人类能把 “t3xt” 读成 “text”，但基于 token 的模型会将它们当作无关序列。
+        </p>
+
+        <h3>1.3 分词带来的后果</h3>
+        <ul>
+          <li><strong>视觉语义丢失：</strong>字体、形状与版式线索消失。</li>
+          <li><strong>多语文本过度切分：</strong>资源稀缺语言被拆成缺乏语义的片段。</li>
+          <li><strong>长文本低效：</strong>少量字符可能对应多个 token，放大上下文长度与成本。</li>
+        </ul>
+
+        <!-- (2) dvq.png (放在分词后果示意) -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/dvq.png" alt="Discrete tokenization vs. visual perception">
+          <figcaption class="mt-2 text-xs text-neutral-500">达·芬奇手稿</figcaption>
+        </figure>
+
+        <p>
+          这就是为什么模型“看过”论文或截图，却容易漏掉公式、表格或图注——因为它们被当成像素而非文本。
+        </p>
+
+        <h3>1.4 互联网上的图像中广泛存在文本</h3>
+        <p>
+          在如 LAION-2B 等数据中，<strong>45%+</strong> 的网页图像包含文本（Lin 等，Parrot，ECCV 2024）。文档、UI、图表、设计，本质上都是“视觉化文本”。
+        </p>
+
+              <!-- (3) parrot.png -->
+      <figure class="mt-6">
+        <img src="https://csu-jpg.github.io/Blog/figures/parrot.png" alt="Text prevalence in web images (Parrot)">
+        <figcaption class="mt-2 text-xs text-neutral-500">文本广泛存在于网页图像中：文档、UI、图表、设计。</figcaption>
+      </figure>
+
+
+        <h2>2. 早期尝试：让模型“看见”文本</h2>
+        <p>一些工作把文本当作图像信号来建模，以弥合这种差距：</p>
+        <ul>
+          <li><strong>visual text representations</strong>（Salesky 等，EMNLP 2021）：把文本渲染为图像，用 ViT-MAE 进行像素重建预训练，去掉 tokenizer；对未见书写系统与正字法扰动更鲁棒。</li>
+          <!-- (4) visual_text_representations.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/visual_text_repre.png" alt="visual text representations">
+            <figcaption class="mt-2 text-xs text-neutral-500">visual text representations</figcaption>
+          </figure>
+          <li><strong>PIXEL</strong>（Phillip 等，ICLR 2023）：把文本渲染为图像，用 ViT-MAE 进行像素重建预训练，去掉 tokenizer；对未见书写系统与正字法扰动更鲁棒。</li>
+               <!-- (4) pixel.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pixel.png" alt="PIXEL: render text as images, ViT-MAE pretraining">
+          <figcaption class="mt-2 text-xs text-neutral-500">PIXEL (ICLR'23): 把文本渲染为图像并用 MAE 预训练。</figcaption>
+        </figure>
+          <li><strong>CLIPPO</strong>（Michael 等，CVPR 2023）：用单一像素编码器统一图像与文本；文本渲染为图像，采用对比学习。</li>
+          <!-- (5) clippo.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/clippo.png" alt="CLIPPO pixel-only encoder">
+          <figcaption class="mt-2 text-xs text-neutral-500">CLIPPO (CVPR'23): 用于图像和文本的纯像素编码器。</figcaption>
+        </figure>
+          <li><strong>Pix2Struct</strong>（Lee 等，ICML 2023）：把截图解析为结构化视觉输入，面向文档/版式理解。</li>
+            <!-- (6) pix2struct.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pix2struct.png" alt="Pix2Struct for screenshot and layout understanding">
+          <figcaption class="mt-2 text-xs text-neutral-500">Pix2Struct (ICML'23): 把截图解析为结构化视觉输入。</figcaption>
+        </figure>
+        <li><strong>PIXAR</strong>(Tai et al., ACL 2024): 基于像素的自回归LLM，能够生成可读文本，使用对抗性预训练克服MLE限制，达到GPT-2级别性能。</li>
+        <!-- (8) pixar.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/pixar.png" alt="PIXAR: a pre-training objective that leverages both visual and textual information to enhance model understanding.">
+          <figcaption class="mt-2 text-xs text-neutral-500">PIXAR (ACL’24): 基于像素的自回归LLM，能够生成可读文本，使用对抗性预训练克服MLE限制，达到GPT-2级别性能。</figcaption>
+        </figure>
+          <li><strong>PTP</strong>（Gao 等，arXiv 2024）：提出截图语言模型与 Patch-and-Text Prediction 目标，同时重建图像补丁与文本。</li>
+          <!-- (7) ptp.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/ptp.png" alt="PTP screenshot language models">
+            <figcaption class="mt-2 text-xs text-neutral-500">PTP (arXiv'24): 截图上的联合补丁和文本预测。</figcaption>
+          </figure>
+        </ul>
+        <b>Fuyu:</b>通过Unified Model处理视觉和文本信息。
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/fuyu.png" alt="Fuyu: precess visual and textual information in a unified model.">
+          <figcaption class="mt-2 text-xs text-neutral-500">Fuyu (arXiv 24'1):通过Unified Model处理视觉和文本信息。</figcaption>
+        </figure>
+        <li><strong>PEAP</strong>（Lyu 等，arXiv 2025')提出一种统一的感知范式，用于与真实世界环境直接交互的智能语言模型，结合视觉和文本信息。</li>
+          <!-- (8) peap.png -->
+          <figure class="mt-4">
+            <img src="https://csu-jpg.github.io/Blog/figures/peap.png" alt="PEAP: a unified perception paradigm for agentic language models that interact directly with real-world environments combining visual and textual information.">
+            <figcaption class="mt-2 text-xs text-neutral-500">PEAP (arXiv'25): 一种统一的感知范式，用于与真实世界环境直接交互的智能语言模型，结合视觉和文本信息。</figcaption>
+          </figure>
+        <p>
+        
+          这些工作让模型开始"看见"文本，但一个关键问题仍待回答：把文本变成图像，<em style="color: #22c55e; font-weight: bold;">具体带来什么可量化收益</em>？
+        </p>
+
+        <h2>3. 近期进展：用视觉 token 做长上下文压缩</h2>
+        <p><strong>关键观察：</strong></p>
+        <ul>
+          <li>视觉编码器通常远小于 LLM（如 ViT-B ~1e8 参数 vs. LLaMA/Mistral 7B+）。</li>
+          <li>CLIP 式预训练能涌现类 OCR 能力，即使没有显式监督。</li>
+          <li>视觉 patch 能编码高密度文本（单位面积更多字符），通过<em>空间压缩</em>有效延长上下文。</li>
+        </ul>
+        <p>
+          交错式（interleaved）文档级多模态预训练是理想设定。<br>
+          <strong>NeurIPS 2024 —— "Leveraging Visual Tokens for Extended Text Contexts"：</strong>
+          将长文本表示为紧凑的视觉 token，使训练与推理都能处理更长、更密集的上下文。
+          该工作把预训练阶段的可用文本上下文从 <strong>256 → 2048</strong>（NVIDIA H100）显著提升。
+        </p>
+            <!-- (9) vis_in_context.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/vis_in_context.png" alt="Visual tokens for extended in-context learning">
+          <figcaption class="mt-2 text-xs text-neutral-500">利用视觉 token 进行扩展的上下文理解。</figcaption>
+        </figure>
+                <!-- (10) vis_in_context_h100.png -->
+                <figure class="mt-4">
+                  <img src="https://csu-jpg.github.io/Blog/figures/visual_in_context_h100.png" alt="H100 pretraining: text context 256→2048">
+                  <figcaption class="mt-2 text-xs text-neutral-500">在 NVIDIA H100 上：上下文文本长度从 256 → 2048 提升。</figcaption>
+                </figure>
+
+        <p>
+          长文本理解是另一理想应用。<br>
+          <strong>Xin 等，NeurIPS 2025 —— "Vision-Centric Token Compression in Large Language Models"（VIST）：</strong>
+          受人类快/慢通路阅读启发：<em>快通路</em>把远距上下文渲染成图像以快速抽取语义；<em>慢通路</em>把关键文本直接送入 LLM 做深度推理。
+        </p>
+        
+        <!-- (11) vist.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/vist.png" alt="VIST: vision-centric token compression in LLMs">
+          <figcaption class="mt-2 text-xs text-neutral-500">VIST (NeurIPS'25): 快速视觉通路 + 慢速语言通路。</figcaption>
+        </figure>
+
+        <p>
+          <strong>DeepSeek-OCR（2025 年 10 月）：Contextual Optical Compression</strong> 把视觉 token 压缩扩展到大规模 OCR：
+          将数千文本 token 压缩为数百个视觉表征，达到约 <strong>97% OCR 精度、约 10× 压缩</strong>。
+          DeepSeek-OCR 的成功得益于 <strong>强大的基础设施</strong> 和 <strong>精细的大规模数据准备</strong>，使得模型能够超越以往的工作，实现远超预期的视觉–token 压缩效果。
+        </p>
+        <!-- (12) deepseek_motivation.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/deepseek_motivation.png" alt="DeepSeek-OCR contextual optical compression">
+          <figcaption class="mt-2 text-xs text-neutral-500">DeepSeek-OCR: 约 97% 精度，约 10× 压缩。</figcaption>
+        </figure>
+
+        <p><em>视觉感知与语言理解的融合并非偶然——它正在成为下一个范式。</em></p>
+
+
+
+        <h2>4. 未来图景：Vision-centric MLLM</h2>
+        <p>
+          在真正以视觉为中心的多模态语言模型里，我们或许不再需要传统 tokenizer。
+          模型将像人一样“视觉化阅读”，甚至以图像方式“视觉化生成”文本，于同一视觉空间统一感知与创作。
+        </p>
+        <p>
+          为此我们需要完善基于图像的文本渲染与长文本视觉生成：
+          <strong>TextAtlas5M</strong> 提供大规模致密文本渲染数据，覆盖说明、文档与设计等视觉表达；
+        </p>
+
+        <span style="color:#d32f2f; font-weight:bold;"><u><b> 稠密文本图像生成:</b></u></span>
+              <!-- (13) textatlas_5m.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/text_atlas_5m.png" alt="TextAtlas5M dataset for dense text rendering">
+          <figcaption class="mt-2 text-xs text-neutral-500">TextAtlas5M: 大规模致密文本渲染。Arxiv 25'2。</figcaption>
+        </figure>
+
+        <br><em>Beyond Words</em> 旨在从自然语言生成高文本量、高信息密度的图像，推动多模态自回归模型迈向真正的长文本视觉生成。</br>
+           <!-- (14) long_text_ar.png -->
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/long_text_ar.png" alt="Beyond Words: long-text visual generation">
+          <figcaption class="mt-2 text-xs text-neutral-500"><em>Beyond Words</em>: 迈向长文本视觉生成。Arxiv 25'2。</figcaption>
+        </figure>
+
+
+        <span style="color:#d32f2f; font-weight:bold;"><u><b> 探索LLM里面更多任务:</b></u></span>
+        <p>
+          <b><strong></strong>Xing et al, Arxiv25'10 - "SEE THE TEXT: FROM TOKENIZATION TO VISUAL READING"</strong></b>, 这个工作将视觉处理文本的思想扩展到更多任务包括分类和QA.
+        </p>
+        <figure class="mt-4">
+          <img src="https://csu-jpg.github.io/Blog/figures/see_the_text.png" alt="See The Text">
+          <figcaption class="mt-2 text-xs text-neutral-500">See The Text (Arxiv25'10): 视觉处理文本的思想扩展到更多任务包括分类和QA.</figcaption>
+        </figure>
+
+        <h2>5. 走向下一代 Vision-centric MLLM</h2>
+        <ul>
+          <li>文本首先是<strong>视觉</strong>，而非仅是符号。</li>
+          <li>视觉就是<strong>语言</strong>，两者并不割裂。</li>
+          <li>压缩即是<strong>感知</strong>，而非仅是工程手段。</li>
+        </ul>
+        <p>
+          终极目标：让模型像人类一样去读、去写、去“看见”文本。<br/>
+          <strong>People see text. 很快，LLMs 与 LVMs 也会如此。</strong>
+        </p>
+        <!-- <p>
+          我们整理了视觉文本相关论文列表：请访问 
+          <a href="https://github.com/CSU-JPG/Awesome-Visual-Text" target="_blank" rel="noopener noreferrer">https://github.com/CSU-JPG/Awesome-Visual-Text</a>
+          查看详情。
+        </p> -->
+      </article>
+
+      <hr class="my-10 border-neutral-200"/>
+      <div class="flex items-center justify-between text-sm">
+        <a id="backHome" href="../" class="text-blue-700 hover:underline">← Back to Home</a>
+        <a id="backTop" href="#top" class="text-neutral-500 hover:underline">Back to Top ↑</a>
+      </div>
+    </main>
+
+    <footer class="border-t border-neutral-200 py-10 text-center text-sm text-neutral-500">
+      © 2025 CSU-JPG Lab · <a class="hover:underline" href="https://csu-jpg.github.io" target="_blank" rel="noreferrer">https://csu-jpg.github.io</a>
+    </footer>
+
+    <!-- ===== 语言切换 + 目录生成 ===== -->
+    <script>
+      const LS_KEY = 'csujpg_lang';
+      const getLang = () => localStorage.getItem(LS_KEY) || 'en';
+      const setLang = (l) => { localStorage.setItem(LS_KEY, l); document.documentElement.lang = (l==='zh'?'zh-CN':'en'); };
+
+      const $en = document.getElementById('content-en');
+      const $zh = document.getElementById('content-zh');
+      const $toc = document.getElementById('toc');
+      const $btnEN = document.getElementById('btnEN');
+      const $btnZH = document.getElementById('btnZH');
+
+      const UI_TEXT = {
+        en: { home:'← Home', pub:'Published on 2025-10-21 · CSU-JPG Lab', toc:'Outline', backHome:'← Back to Home', backTop:'Back to Top ↑' },
+        zh: { home:'← 返回首页', pub:'发布于 2025-10-21 · CSU-JPG Lab', toc:'目录', backHome:'← 返回首页', backTop:'回到顶部 ↑' }
+      };
+
+      function buildTOC() {
+        if (!$toc) return;
+        const active = !$en.hidden ? $en : $zh;
+        const hs = active.querySelectorAll('h1, h2, h3');
+        const ol = document.createElement('ol');
+        ol.className = 'list-decimal list-inside mt-2 space-y-1 text-blue-700';
+        hs.forEach((h, i) => {
+          if (!h.id) {
+            h.id = 'sec-' + i + '-' + (h.textContent||'').trim().toLowerCase().replace(/\s+/g,'-').replace(/[^\w\-]/g,'');
+          }
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '#' + h.id;
+          a.textContent = h.textContent;
+          a.className = 'hover:underline';
+          li.appendChild(a);
+          ol.appendChild(li);
+        });
+        const lang = (!$en.hidden ? 'en' : 'zh');
+        $toc.innerHTML = '';
+        const title = document.createElement('div');
+        title.className = 'font-semibold';
+        title.textContent = UI_TEXT[lang].toc;
+        $toc.appendChild(title);
+        $toc.appendChild(ol);
+      }
+
+      function applyLang(l){
+        setLang(l);
+        if (l === 'zh') {
+          $en.hidden = true;  $zh.hidden = false;
+          $btnEN.className = 'px-2 py-1 rounded hover:bg-neutral-100';
+          $btnZH.className = 'px-2 py-1 rounded bg-black text-white';
+        } else {
+          $en.hidden = false; $zh.hidden = true;
+          $btnEN.className = 'px-2 py-1 rounded bg-black text-white';
+          $btnZH.className = 'px-2 py-1 rounded hover:bg-neutral-100';
+        }
+        const t = UI_TEXT[l];
+        document.getElementById('homeLink').textContent = t.home;
+        document.getElementById('pubdate').textContent = t.pub;
+        document.getElementById('backHome').textContent = t.backHome;
+        document.getElementById('backTop').textContent = t.backTop;
+        buildTOC();
+      }
+
+      // 初始化
+      applyLang(getLang());
+      // 绑定按钮
+      $btnEN.addEventListener('click', ()=>applyLang('en'));
+      $btnZH.addEventListener('click', ()=>applyLang('zh'));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en"> <!-- 默认英文 -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stories | Vision-centric MLLM Evolution</title>
+    <meta name="description" content="CSU-JPG: Research story and evolution around Leveraging Visual Tokens (NeurIPS'24) and Vision-centric Token Compression (NeurIPS'25 Spotlight)." />
+    <meta property="og:title" content="Stories | Vision-centric MLLM Evolution" />
+    <meta property="og:description" content="From visualizing long text to vision-fast-scan + language-deep-read, our two-step route for Vision-centric MLLM." />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🧠</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>html{scroll-behavior:smooth}</style>
+  </head>
+  <body class="bg-white text-neutral-900">
+    <header class="border-b border-neutral-200">
+      <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a id="homeLink" href="https://csu-jpg.github.io/" class="text-sm text-blue-700 hover:underline">← Home</a>
+        <div class="flex items-center gap-3">
+          <div id="pubdate" class="text-sm text-neutral-500">Published on 2025-10-21 · CSU-JPG Lab</div>
+          <div class="h-5 w-px bg-neutral-200"></div>
+          <div class="text-sm">
+            <button id="btnEN" class="px-2 py-1 rounded bg-black text-white">EN</button>
+            <span class="mx-1 text-neutral-300">|</span>
+            <button id="btnZH" class="px-2 py-1 rounded hover:bg-neutral-100">中文</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-10">
+      <h1 id="title" class="text-3xl md:text-4xl font-extrabold leading-tight">
+        Vision-centric MLLM: The Technical Evolution
+      </h1>
+      <p id="subtitle" class="mt-3 text-neutral-600">
+        This article tells our two-step route for advancing MLLMs with a <strong>visual-first</strong> approach:
+        <span class="whitespace-nowrap">① NeurIPS'24: Leveraging Visual Tokens</span> and
+        <span class="whitespace-nowrap">② NeurIPS'25 Spotlight: Vision-centric Token Compression</span>.
+      </p>
+
+      <!-- Hero Figure -->
+      <figure class="mt-6">
+        <img class="w-full rounded-2xl border" src="https://fingerrec.github.io/index_files/jinpeng/papers/ARXIV2024/motivation.png" alt="NeurIPS 2024 Visual Tokens Motivation"/>
+        <figcaption id="fig1cap" class="mt-2 text-xs text-neutral-500">
+          Fig.1: Visualize long text so the vision encoder handles layout & dense info, relieving LLM context pressure (NeurIPS'24).
+        </figcaption>
+      </figure>
+
+      <!-- Outline -->
+      <nav class="mt-8 text-sm">
+        <div id="tocTitle" class="font-semibold">Outline</div>
+        <ol class="list-decimal list-inside mt-2 space-y-1 text-blue-700">
+          <li><a id="toc1" class="hover:underline" href="#motivation">Motivation: Why “visualize text”?</a></li>
+          <li><a id="toc2" class="hover:underline" href="#nips24">NeurIPS'24: Leveraging Visual Tokens for Extended Text Contexts</a></li>
+          <li><a id="toc3" class="hover:underline" href="#nips25">NeurIPS'25 Spotlight: Vision-centric Token Compression in LLM</a></li>
+          <li><a id="toc4" class="hover:underline" href="#compare">Contrast & Evolution: How the two steps connect</a></li>
+          <li><a id="toc5" class="hover:underline" href="#related">Related Evidence & References</a></li>
+        </ol>
+      </nav>
+
+      <h2>4. 未来图景：Vision-centric MLLM</h2>
+      <p>
+        在真正以视觉为中心的多模态语言模型里，我们或许不再需要传统 tokenizer。
+        模型将像人一样“视觉化阅读”，甚至以图像方式“视觉化生成”文本，于同一视觉空间统一感知与创作。
+      </p>
+      <p>
+        为此我们需要完善基于图像的文本渲染与长文本视觉生成：
+        <strong>TextAtlas5M</strong> 提供大规模致密文本渲染数据，覆盖说明、文档与设计等视觉表达；
+        <br><em>Beyond Words</em> 旨在从自然语言生成高文本量、高信息密度的图像，推动多模态自回归模型迈向真正的长文本视觉生成。
+      </p>
+            <!-- (13) textatlas_5m.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/text_atlas_5m.png" alt="TextAtlas5M dataset for dense text rendering">
+        <figcaption class="mt-2 text-xs text-neutral-500">TextAtlas5M: 大规模致密文本渲染。Arxiv 25'2。</figcaption>
+      </figure>
+         <!-- (14) long_text_ar.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/long_text_ar.png" alt="Beyond Words: long-text visual generation">
+        <figcaption class="mt-2 text-xs text-neutral-500"><em>Beyond Words</em>: 迈向长文本视觉生成。Arxiv 25'2。</figcaption>
+      </figure>
+
+      <h2>4. The Future Ahead: A Vision-centric MLLM</h2>
+      <p>
+        In a truly vision-centric multimodal language model, we may no longer need a traditional tokenizer.
+        The model could read text visually — as humans do — and even generate text as images, <b> <u>unifying perception and generation in the same visual space.</u> </b>
+      </p>
+      <b> Dense Text Image Generation:</b>
+      <p>
+        To reach that goal, we must perfect image-based text rendering and long-text visual generation:
+        <strong>TextAtlas5M</strong> provides large-scale dense text rendering where captions, documents, and designs are visually represented.
+            <!-- (13) textatlas_5m.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/text_atlas_5m.png" alt="TextAtlas5M dataset for dense text rendering">
+        <figcaption class="mt-2 text-xs text-neutral-500">TextAtlas5M: large-scale dense text rendering. Arxiv 25'2.</figcaption>
+      </figure>
+        <br><em>Beyond Words</em> aims to generate text-heavy, information-dense images from natural prompts, pushing multimodal autoregressive models toward true long-text visual generation.
+         <!-- (14) long_text_ar.png -->
+      <figure class="mt-4">
+        <img src="https://csu-jpg.github.io/Blog/figures/long_text_ar.png" alt="Beyond Words: long-text visual generation">
+        <figcaption class="mt-2 text-xs text-neutral-500"><em>Beyond Words</em>: toward long-text visual generation. Arxiv 25'2.</figcaption>
+      </figure>
+      </p>
+      <section id="motivation" class="mt-10">
+        <h2 id="motivationTitle" class="text-2xl font-bold">Motivation: Why “visualize text”?</h2>
+        <p id="motivationBody" class="mt-3 leading-7 text-neutral-700">
+          In real scenarios, long text is often <strong>mixed-layout</strong>, with <strong>dense characters</strong> and <strong>cross-region relations</strong>.
+          Processing it directly with an LLM consumes context budget and strains layout understanding and cross-paragraph integration.
+          Vision encoders excel at <strong>spatial structure</strong>, <strong>layout</strong> and <strong>scanning</strong>:
+          by rendering long text into images or visual tokens, the vision model can “scan first” and pass only key information to the LLM, enabling
+          <strong>longer effective context, higher efficiency, and more robust understanding</strong>.
+        </p>
+      </section>
+
+      <section id="nips24" class="mt-10">
+        <h2 id="n24Title" class="text-2xl font-bold">NeurIPS'24: Leveraging Visual Tokens for Extended Text Contexts</h2>
+        <p id="n24Body" class="mt-3 leading-7 text-neutral-700">
+          In 2024, we proposed to <strong>compress long text with a vision encoder</strong>:
+          “visualize text” and encode it as visual tokens, then reason with an LLM. This significantly extends effective context and is
+          friendly to complex layouts, tables and screenshot-like inputs.
+        </p>
+        <ul id="n24Bullets" class="mt-3 list-disc list-inside text-neutral-700 space-y-1">
+          <li>Intuition: save <em>context budget</em>, stabilize <em>cross-region associations</em>.</li>
+          <li>Typical scenarios: manuals/webpages/paper screenshots, cross-paragraph QA, retrieval & reasoning with complex layout.</li>
+        </ul>
+        <figure class="mt-4">
+          <img class="w-full rounded-2xl border" src="https://fingerrec.github.io/index_files/jinpeng/papers/longtextar2025/main_ppl.png" alt="LongTextAR Figure"/>
+          <figcaption id="fig2cap" class="mt-2 text-xs text-neutral-500">
+            Fig.2: Works like LongTextAR supplement training/evaluation for dense text image generation/understanding.
+          </figcaption>
+        </figure>
+        <div class="mt-3 text-sm text-blue-700 space-x-4">
+          <a id="n24Paper" class="hover:underline" href="https://arxiv.org/abs/2406.02547" target="_blank" rel="noreferrer">Paper (arXiv:2406.02547)</a>
+          <a id="n24Code" class="hover:underline" href="https://github.com/showlab/visincontext" target="_blank" rel="noreferrer">Code</a>
+          <a id="n24Proj" class="hover:underline" href="https://fingerrec.github.io/visincontext/" target="_blank" rel="noreferrer">Project</a>
+        </div>
+      </section>
+
+      <section id="nips25" class="mt-10">
+        <h2 id="n25Title" class="text-2xl font-bold">NeurIPS'25 Spotlight: Vision-centric Token Compression in LLM</h2>
+        <p id="n25Body" class="mt-3 leading-7 text-neutral-700">
+          In 2025, we further propose a <strong>reading heuristic</strong>:
+          humans <em>scan</em> unimportant content visually and <em>deep-read</em> key content with language.
+          Accordingly, we <strong>delegate non-critical content to the vision encoder for compression</strong>,
+          reserving precious LLM context for core parts—achieving lower latency and stronger long-text handling.
+        </p>
+        <ul id="n25Bullets" class="mt-3 list-disc list-inside text-neutral-700 space-y-1">
+          <li>Vision: fast scanning, structure extraction, redundancy compression.</li>
+          <li>Language: key details, logical reasoning, high-level planning.</li>
+          <li>Outcome: comparable or better performance with equal/smaller context.</li>
+        </ul>
+        <div class="mt-3 text-sm text-blue-700 space-x-4">
+          <a id="n25Paper" class="hover:underline" href="https://arxiv.org/abs/2502.00791" target="_blank" rel="noreferrer">Paper (preprint)</a>
+        </div>
+      </section>
+
+      <section id="compare" class="mt-10">
+        <h2 id="cmpTitle" class="text-2xl font-bold">Contrast & Evolution: How the two steps connect</h2>
+        <div class="mt-3 grid md:grid-cols-2 gap-4 text-sm">
+          <div class="rounded-2xl border p-4">
+            <div id="cmpL" class="font-semibold">Step 1 (NeurIPS'24)</div>
+            <ul id="cmpLBullets" class="mt-2 list-disc list-inside space-y-1 text-neutral-700">
+              <li>Visualize text → compress long context via visual tokens</li>
+              <li>Strengthen layout & dense-text understanding</li>
+              <li>Significantly reduce LLM context usage</li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border p-4">
+            <div id="cmpR" class="font-semibold">Step 2 (NeurIPS'25 Spotlight)</div>
+            <ul id="cmpRBullets" class="mt-2 list-disc list-inside space-y-1 text-neutral-700">
+              <li>Reading heuristic: vision fast-scan, language deep-read</li>
+              <li>Dynamic context budgeting, more efficient</li>
+              <li>End-to-end task performance continues improving</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="related" class="mt-10">
+        <h2 id="relTitle" class="text-2xl font-bold">Related Evidence & References</h2>
+        <p id="relBody" class="mt-3 leading-7 text-neutral-700">
+          The “visualizing text” idea is supported by several parallel lines of work in the community:
+        </p>
+        <ul id="relList" class="mt-2 list-disc list-inside text-neutral-700 space-y-1">
+          <li>Princeton: <em>Language Modelling with Pixels</em> (ICLR 2023)</li>
+          <li>Google Research: <em>CLIPPO: Image-and-Language Understanding from Pixels Only</em> (CVPR 2023)</li>
+          <li>Lee et al.: <em>Pix2Struct</em> (ICML 2023)</li>
+          <li>Danqi Chen’s group: <em>Improving Language Understanding from Screenshots</em> (ArXiv 2024/02)</li>
+        </ul>
+        <p id="relMore" class="mt-3 text-sm text-blue-700">
+          Further reading:
+          <a class="hover:underline" href="https://textatlas5m.github.io/" target="_blank" rel="noreferrer">TextAtlas5M</a> ,
+          <a class="hover:underline" href="https://github.com/CSU-JPG/V-MAGE" target="_blank" rel="noreferrer">V-MAGE</a> ,
+          <a class="hover:underline" href="https://github.com/CSU-JPG/MVPBench" target="_blank" rel="noreferrer">MVPBench</a>
+        </p>
+      </section>
+
+      <hr class="my-10 border-neutral-200"/>
+      <div class="flex items-center justify-between text-sm">
+        <a id="backHome" href="./" class="text-blue-700 hover:underline">← Back to Home</a>
+        <a id="backTop" href="#top" class="text-neutral-500 hover:underline">Back to Top ↑</a>
+      </div>
+    </main>
+
+    <footer class="border-t border-neutral-200 py-10 text-center text-sm text-neutral-500">
+      © 2025 CSU-JPG Lab · <a class="hover:underline" href="https://csu-jpg.github.io" target="_blank" rel="noreferrer">https://csu-jpg.github.io</a>
+    </footer>
+
+    <script>
+      // ===== 简易 i18n（默认英文），与首页保持一致的 localStorage 键 =====
+      const LS_KEY = 'csujpg_lang';
+      const getLang = () => localStorage.getItem(LS_KEY) || 'en';
+      const setLang = (l) => { localStorage.setItem(LS_KEY, l); document.documentElement.lang = (l==='en'?'en':'zh-CN'); };
+
+      const T = {
+        en: {
+          home: '← Home',
+          pubdate: 'Published on 2025-10-21 · CSU-JPG Lab',
+          title: 'Vision-centric MLLM: The Technical Evolution',
+          subtitle: 'This article tells our two-step route for advancing MLLMs with a <strong>visual-first</strong> approach: <span class="whitespace-nowrap">① NeurIPS\'24: Leveraging Visual Tokens</span> and <span class="whitespace-nowrap">② NeurIPS\'25 Spotlight: Vision-centric Token Compression</span>.',
+          fig1cap: 'Fig.1: Visualize long text so the vision encoder handles layout & dense info, relieving LLM context pressure (NeurIPS\'24).',
+          tocTitle: 'Outline',
+          toc1: 'Motivation: Why “visualize text”?',
+          toc2: 'NeurIPS\'24: Leveraging Visual Tokens for Extended Text Contexts',
+          toc3: 'NeurIPS\'25 Spotlight: Vision-centric Token Compression in LLM',
+          toc4: 'Contrast & Evolution: How the two steps connect',
+          toc5: 'Related Evidence & References',
+          motivationTitle: 'Motivation: Why “visualize text”?',
+          motivationBody: 'In real scenarios, long text is often <strong>mixed-layout</strong>, with <strong>dense characters</strong> and <strong>cross-region relations</strong>. Processing it directly with an LLM consumes context budget and strains layout understanding and cross-paragraph integration. Vision encoders excel at <strong>spatial structure</strong>, <strong>layout</strong> and <strong>scanning</strong>: by rendering long text into images or visual tokens, the vision model can “scan first” and pass only key information to the LLM, enabling <strong>longer effective context, higher efficiency, and more robust understanding</strong>.',
+          n24Title: 'NeurIPS\'24: Leveraging Visual Tokens for Extended Text Contexts',
+          n24Body: 'In 2024, we proposed to <strong>compress long text with a vision encoder</strong>: “visualize text” and encode it as visual tokens, then reason with an LLM. This significantly extends effective context and is friendly to complex layouts, tables and screenshot-like inputs.',
+          n24Bullets: [
+            'Intuition: save <em>context budget</em>, stabilize <em>cross-region associations</em>.',
+            'Typical scenarios: manuals/webpages/paper screenshots, cross-paragraph QA, retrieval & reasoning with complex layout.'
+          ],
+          fig2cap: 'Fig.2: Works like LongTextAR supplement training/evaluation for dense text image generation/understanding.',
+          n24Paper: 'Paper (arXiv:2406.02547)',
+          n24Code: 'Code',
+          n24Proj: 'Project',
+          n25Title: 'NeurIPS\'25 Spotlight: Vision-centric Token Compression in LLM',
+          n25Body: 'In 2025, we further propose a <strong>reading heuristic</strong>: humans <em>scan</em> unimportant content visually and <em>deep-read</em> key content with language. Accordingly, we <strong>delegate non-critical content to the vision encoder for compression</strong>, reserving precious LLM context for core parts—achieving lower latency and stronger long-text handling.',
+          n25Bullets: [
+            'Vision: fast scanning, structure extraction, redundancy compression.',
+            'Language: key details, logical reasoning, high-level planning.',
+            'Outcome: comparable or better performance with equal/smaller context.'
+          ],
+          n25Paper: 'Paper (preprint)',
+          cmpTitle: 'Contrast & Evolution: How the two steps connect',
+          cmpL: 'Step 1 (NeurIPS\'24)',
+          cmpLBullets: [
+            'Visualize text → compress long context via visual tokens',
+            'Strengthen layout & dense-text understanding',
+            'Significantly reduce LLM context usage'
+          ],
+          cmpR: 'Step 2 (NeurIPS\'25 Spotlight)',
+          cmpRBullets: [
+            'Reading heuristic: vision fast-scan, language deep-read',
+            'Dynamic context budgeting, more efficient',
+            'End-to-end task performance continues improving'
+          ],
+          relTitle: 'Related Evidence & References',
+          relBody: 'The “visualizing text” idea is supported by several parallel lines of work in the community:',
+          relList: [
+            'Princeton: <em>Language Modelling with Pixels</em> (ICLR 2023)',
+            'Google Research: <em>CLIPPO: Image-and-Language Understanding from Pixels Only</em> (CVPR 2023)',
+            'Lee et al.: <em>Pix2Struct</em> (ICML 2023)',
+            'Danqi Chen’s group: <em>Improving Language Understanding from Screenshots</em> (ArXiv 2024/02)'
+          ],
+          relMore: 'Further reading:',
+          backHome: '← Back to Home',
+          backTop: 'Back to Top ↑'
+        },
+        zh: {
+          home: '← 返回首页',
+          pubdate: '发布于 2025-10-21 · CSU-JPG Lab',
+          title: '以视觉为中心（Vision-centric）的多模态大模型演进',
+          subtitle: '本文讲述我们将<strong>长文本“视觉化”</strong>、并以<strong>视觉为先</strong>推进多模态大模型（MLLM）能力的两步走路线：<span class="whitespace-nowrap">① NeurIPS\'24：Leveraging Visual Tokens</span> 与 <span class="whitespace-nowrap">② NeurIPS\'25 Spotlight：Vision-centric Token Compression</span>。',
+          fig1cap: '图 1：将长文本视觉化，由视觉编码器处理布局与密集信息，缓解 LLM 上下文压力（NeurIPS\'24）。',
+          tocTitle: '目录',
+          toc1: '动机：为何“把文本视觉化”？',
+          toc2: 'NeurIPS\'24：Leveraging Visual Tokens for Extended Text Contexts',
+          toc3: 'NeurIPS\'25 Spotlight：Vision-centric Token Compression in LLM',
+          toc4: '对比与演进：两步走如何衔接',
+          toc5: '相关证据与参考',
+          motivationTitle: '动机：为何“把文本视觉化”？',
+          motivationBody: '在真实世界中，长文本往往<strong>混排</strong>、含有<strong>布局</strong>、<strong>密集字符</strong>与<strong>跨区域关联</strong>。直接让语言模型处理这些输入，不仅占用宝贵的上下文窗口，也让模型在版式理解与跨段信息整合上承压。视觉编码器在<strong>空间结构</strong>、<strong>排版</strong>与<strong>扫描</strong>方面具备天然优势：如果我们先把长文本渲染为图像或视觉 token，视觉模型可以先行“扫图”，只把关键信息传递给 LLM，从而实现<strong>更长上下文、更高效率、更稳健的理解</strong>。',
+          n24Title: 'NeurIPS\'24：Leveraging Visual Tokens for Extended Text Contexts',
+          n24Body: '我们在 2024 年提出：<strong>用视觉编码器压缩长文本</strong>，将文本“视觉化”并编码为视觉 token，结合语言模型进行多模态推理。这一方案显著拉长了有效上下文，并对复杂版式、表格、截图类输入更友好。',
+          n24Bullets: [
+            '直观好处：<em>上下文预算</em>更省、<em>跨区域关联</em>更稳。',
+            '典型场景：说明书/网页/论文截图解析、跨段落问答、带复杂排版的检索与推理。'
+          ],
+          fig2cap: '图 2：LongTextAR 等相关工作补充了密集文本图像生成/理解的训练与评测维度。',
+          n24Paper: '论文（arXiv:2406.02547）',
+          n24Code: '代码',
+          n24Proj: '项目页',
+          n25Title: 'NeurIPS\'25 Spotlight：Vision-centric Token Compression in LLM',
+          n25Body: '2025 年我们进一步提出<strong>阅读启发式</strong>：<em>人类会用“视觉”快速扫描不重要信息、用“语言”精读关键信息</em>。据此，我们将<strong>非关键信息交给视觉编码器压缩</strong>，把宝贵的语言上下文留给核心内容，实现更低延迟、更强长文处理能力。',
+          n25Bullets: [
+            '视觉：快速扫描、结构抽取、冗余压缩。',
+            '语言：关键细节、逻辑推理、高层规划。',
+            '效果：在同等或更小上下文下，保持/提升复杂任务性能。'
+          ],
+          n25Paper: '论文（预印本）',
+          cmpTitle: '对比与演进：两步走如何衔接',
+          cmpL: 'Step 1（NeurIPS\'24）',
+          cmpLBullets: [
+            '把文本视觉化 → 视觉 token 压缩长上下文',
+            '强化布局与密集文本理解',
+            '显著降低语言上下文占用'
+          ],
+          cmpR: 'Step 2（NeurIPS\'25 Spotlight）',
+          cmpRBullets: [
+            '阅读启发式：视觉快速扫、语言精读',
+            '动态分配上下文预算，更高效',
+            '端到端任务性能持续提升'
+          ],
+          relTitle: '相关证据与参考',
+          relBody: '“文本视觉化”的思路在社区中有多条平行证据支撑：',
+          relList: [
+            'Princeton：<em>Language Modelling with Pixels</em>（ICLR 2023）',
+            'Google Research：<em>CLIPPO: Image-and-Language Understanding from Pixels Only</em>（CVPR 2023）',
+            'Lee et al.：<em>Pix2Struct</em>（ICML 2023）',
+            '陈丹奇团队：<em>Improving Language Understanding from Screenshots</em>（ArXiv 2024/02）'
+          ],
+          relMore: '延伸阅读：',
+          backHome: '← 返回首页',
+          backTop: '回到顶部 ↑'
+        }
+      };
+
+      function applyLang(lang){
+        const t = T[lang];
+        // 顶部
+        document.getElementById('homeLink').textContent = t.home;
+        document.getElementById('pubdate').textContent = t.pubdate;
+        document.getElementById('btnEN').className = 'px-2 py-1 rounded ' + (lang==='en' ? 'bg-black text-white':'hover:bg-neutral-100');
+        document.getElementById('btnZH').className = 'px-2 py-1 rounded ' + (lang==='zh' ? 'bg-black text-white':'hover:bg-neutral-100');
+
+        // 标题/副标题/图注
+        document.getElementById('title').textContent = '';
+        document.getElementById('title').innerHTML = t.title;
+        document.getElementById('subtitle').innerHTML = t.subtitle;
+        document.getElementById('fig1cap').innerHTML = t.fig1cap;
+
+        // 目录
+        document.getElementById('tocTitle').textContent = t.tocTitle;
+        document.getElementById('toc1').textContent = t.toc1;
+        document.getElementById('toc2').textContent = t.toc2;
+        document.getElementById('toc3').textContent = t.toc3;
+        document.getElementById('toc4').textContent = t.toc4;
+        document.getElementById('toc5').textContent = t.toc5;
+
+        // Motivation
+        document.getElementById('motivationTitle').textContent = t.motivationTitle;
+        document.getElementById('motivationBody').innerHTML = t.motivationBody;
+
+        // NeurIPS'24
+        document.getElementById('n24Title').textContent = t.n24Title;
+        document.getElementById('n24Body').innerHTML = t.n24Body;
+        const n24B = document.getElementById('n24Bullets');
+        n24B.innerHTML = '';
+        t.n24Bullets.forEach(li=>{ const el=document.createElement('li'); el.innerHTML=li; n24B.appendChild(el); });
+        document.getElementById('fig2cap').innerHTML = t.fig2cap;
+        document.getElementById('n24Paper').textContent = t.n24Paper;
+        document.getElementById('n24Code').textContent = t.n24Code;
+        document.getElementById('n24Proj').textContent = t.n24Proj;
+
+        // NeurIPS'25
+        document.getElementById('n25Title').textContent = t.n25Title;
+        document.getElementById('n25Body').innerHTML = t.n25Body;
+        const n25B = document.getElementById('n25Bullets');
+        n25B.innerHTML = '';
+        t.n25Bullets.forEach(li=>{ const el=document.createElement('li'); el.innerHTML=li; n25B.appendChild(el); });
+        document.getElementById('n25Paper').textContent = t.n25Paper;
+
+        // 对比/演进
+        document.getElementById('cmpTitle').textContent = t.cmpTitle;
+        document.getElementById('cmpL').textContent = t.cmpL;
+        const cmpLB = document.getElementById('cmpLBullets');
+        cmpLB.innerHTML = '';
+        t.cmpLBullets.forEach(li=>{ const el=document.createElement('li'); el.innerHTML=li; cmpLB.appendChild(el); });
+        document.getElementById('cmpR').textContent = t.cmpR;
+        const cmpRB = document.getElementById('cmpRBullets');
+        cmpRB.innerHTML = '';
+        t.cmpRBullets.forEach(li=>{ const el=document.createElement('li'); el.innerHTML=li; cmpRB.appendChild(el); });
+
+        // 相关工作
+        document.getElementById('relTitle').textContent = t.relTitle;
+        document.getElementById('relBody').innerHTML = t.relBody;
+        const relList = document.getElementById('relList');
+        relList.innerHTML = '';
+        t.relList.forEach(li=>{ const el=document.createElement('li'); el.innerHTML=li; relList.appendChild(el); });
+        document.getElementById('relMore').firstChild.textContent = t.relMore + ' ';
+        // 底部按钮
+        document.getElementById('backHome').textContent = t.backHome;
+        document.getElementById('backTop').textContent = t.backTop;
+
+        setLang(lang);
+      }
+
+      // 初始化语言
+      const langInit = getLang();
+      setLang(langInit);
+      applyLang(langInit);
+
+      // 切换事件
+      document.getElementById('btnEN').addEventListener('click', ()=>applyLang('en'));
+      document.getElementById('btnZH').addEventListener('click', ()=>applyLang('zh'));
+    </script>
+  </body>
+</html>
