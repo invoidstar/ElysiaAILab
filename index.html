@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 下面这个是修改的网页题目 -->
     <title>ElysiaAILab | Elysian Realm</title>
     <meta name="description" content="CSU-JPG Lab — Vision-centric MLLM · Long-text visual generation & understanding." />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -258,7 +259,10 @@
         function Logo(){ return (
           <div className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-black text-white shadow"><span className="text-lg font-bold">J</span></span>
-            <div><div className="font-bold">CSU-JPG Lab</div><div className="text-xs text-neutral-500 muted">Vision-centric Multimodal Intelligence</div></div>
+            <div>
+            <div className="font-bold">ElysiaAILab</div>
+            <div className="text-xs text-neutral-500 muted">Elysian Realm</div>
+            </div>
           </div>
         );}
         const Section=({id,title,children})=>(<section id={id} className="scroll-mt-24 py-16 reveal"><h2 className="text-2xl md:text-3xl font-bold mb-6">{title}</h2>{children}</section>);
