@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- 下面这个是修改的网页题目 -->
     <title>ElysiaAILab | Elysian Realm</title>
-    <meta name="description" content="CSU-JPG Lab — Vision-centric MLLM · Long-text visual generation & understanding." />
+    <meta name="description" content="ElysiaAILab 这个不知道修改在哪." />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html { scroll-behavior: smooth; }
@@ -81,7 +81,7 @@
             search_placeholder:'Search title/authors/venue…', filter_all:'All', total_fmt:n=>`Total ${n} items`,
             card_homepage:'Homepage', 
             contact_addr_label:'Address', contact_addr:'Jilin University · College of Software · ElysiaAILab',
-            contact_email_label:'Email', contact_social_label:'Social', footer:y=>`© ${y} CSU-JPG Lab.`,
+            contact_email_label:'Email', contact_social_label:'Social', footer:y=>`© ${y} ElysiaAILab.`,
             lang_toggle_en:'EN', lang_toggle_zh:'中文',
             blog_card_title:'Some CSDN Blogs',
             blog_card_desc:'Published on 2025-03-26 · Some CSDN Blogs during learning period',
@@ -95,11 +95,12 @@
             hero_kpi:[{label:'论文',key:'papers'},{label:'开放数据/基准',key:'datasets'},{label:'核心成员',key:'members'}],
             title_research:'研究方向', title_news:'新闻', title_publications:'论文', title_datasets:'数据集 / Benchmark', title_people:'成员', title_openings:'招生/招聘', title_blog:'Blog', title_contact:'联系',
             search_placeholder:'搜索标题/作者/会议…', filter_all:'全部', total_fmt:n=>`共 ${n} 篇`,
-            card_homepage:'主页 / Homepage', contact_addr_label:'地址', contact_addr:'中南大学 · 计算机学院 · CSU-JPG 实验室',
-            contact_email_label:'邮箱', contact_social_label:'社交', footer:y=>`© ${y} CSU-JPG Lab.`,
+            card_homepage:'主页 / Homepage', 
+            contact_addr_label:'地址', contact_addr:'吉林大学 · 软件学院 · ElysiaAILab',
+            contact_email_label:'邮箱', contact_social_label:'社交', footer:y=>`© ${y} ElysiaAILab.`,
             lang_toggle_en:'EN', lang_toggle_zh:'中文',
-            blog_card_title:'Stories：People See Text, But LLM Not',
-            blog_card_desc:'发布于 2025-10-21 · 我们探索人类与 LLM 在文本视觉感知上的差距',
+            blog_card_title:'一些CSDN博客',
+            blog_card_desc:'发布于 2025-03-26 · 在学习阶段的一些CSDN博客',
             clear:'清除', copy:'复制', copied:'已复制'
           }
         };
@@ -218,9 +219,10 @@
         ];
 
         const news = [
-          {date:'2026-01', text_en:'We released " Glance: One Sample Distillation Model", see https://glance.github.io/ for details.', text_zh:'我们发布了 Glance: One Sample Distillation Model，详情见 <a href="https://zhuobaidong.github.io/Glance/">Website</a> 。'},
-          {date:'2025-11', text_en:'One paper accepted to AAAI 2026', text_zh:'一篇论文被 AAAI 2026 接收。'},
-          {date:'2025-10', text_en:'One paper accepted to TII 2026', text_zh:'一篇论文被 TII 2026 接收。'},
+          // {date:'2026-01', text_en:'see https://glance.github.io/ for details.', text_zh:'详情见 <a href="https://zhuobaidong.github.io/Glance/">Website</a> 。'},
+          {date:'2026-01', text_en:'One paper has been submitted to TII', text_zh:'一篇论文已提交给TII。'},
+          {date:'2025-11', text_en:'One paper accepted to AAAI', text_zh:'一篇论文被 AAAI接收。'},
+          {date:'2025-10', text_en:'One paper accepted to TII', text_zh:'一篇论文被 TII接收。'},
           {date:'2025-10', text_en:'ElysiaAILab Established', text_zh:'ElysiaAILab 成立了。'}
         ];
 
@@ -597,7 +599,7 @@
 
               {/* Footer */}
               <footer className="border-t border-theme py-10 text-center text-sm muted">
-                {T.footer(new Date().getFullYear())} <a href="https://csu-jpg.github.io" className="hover:underline">https://csu-jpg.github.io</a>
+                {T.footer(new Date().getFullYear())} <a href="https://github.com/invoidstar" className="hover:underline">https://github.com/invoidstar</a>
               </footer>
 
               {/* Back to Top FAB */}
