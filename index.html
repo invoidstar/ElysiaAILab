@@ -79,7 +79,8 @@
             hero_kpi:[{label:'Publications',key:'papers'},{label:'Open Datasets',key:'datasets'},{label:'Core Members',key:'members'}],
             title_research:'Research', title_news:'News', title_publications:'Publications', title_datasets:'Datasets', title_people:'People', title_openings:'Openings', title_blog:'Blog', title_contact:'Contact',
             search_placeholder:'Search title/authors/venue…', filter_all:'All', total_fmt:n=>`Total ${n} items`,
-            card_homepage:'Homepage', contact_addr_label:'Address', contact_addr:'School of Computer Science, Central South University · CSU-JPG Lab',
+            card_homepage:'Homepage', 
+            contact_addr_label:'Address', contact_addr:'Jilin University · College of Software · ElysiaAILab',
             contact_email_label:'Email', contact_social_label:'Social', footer:y=>`© ${y} CSU-JPG Lab.`,
             lang_toggle_en:'EN', lang_toggle_zh:'中文',
             blog_card_title:'Stories: People See Text, But LLM Not',
@@ -126,23 +127,24 @@
 
         // ================= 数据 =================
         const research = [
-          { title_en:'Vision-centric Multimodal Large Language Models (MLLM)', 
-            title_zh:'以视觉为中心的多模态大模型 (Vision-centric MLLM)', 
+          { title_en:'Computer Vision', 
+            title_zh:'计算机视觉', 
             href:'#blog',
-            desc_en:'Vision-first unification, interleaved long context.',
-            desc_zh:'视觉为先的统一建模、interleaved 长上下文。', 
-            tags:['Vision-centric','Interleaved']},
+            desc_en:'Vision-first unification.',
+            desc_zh:'视觉为先的统一建模。', 
+            tags:['Event-Vision','Sign Language','Image Restoration','Video Understanding']},
           { title_en:'Data-centric AI', 
-            title_zh:'Data-centric AI', 
+            title_zh:'数据驱动AI', 
             href:'#datasets',
-            desc_en:'Large-scale data curation, human-in-the-loop evaluation, automated benchmarks for layout/long-text.',
-            desc_zh:'大规模数据构建与治理、人机协同评测与自动化 benchmark、长文本渲染与布局理解评测框架。', 
-            tags:['Data-centric','Benchmark','Evaluation']},
-          { title_en:'Generation & Understanding', 
-            title_zh:'生成与理解', href:'#research-systems',
-            desc_en:'Long-text image generation, tokenizer, long-text rendering, cross-modal retrieval & reasoning.',
-            desc_zh:'长文本图像生成、tokenizer、长文本渲染、跨模态检索与推理、操作研究(OR)过程监督。', 
-            tags:['Long-text Image Generation','Tokenizer','Long-text Rendering','Cross-modal Retrieval','OR Process Supervision']},
+            desc_en:'Large-scale data curation.',
+            desc_zh:'大规模数据构建', 
+            tags:['Benchmark','Evaluation','Sign Language','Image Deblurring']},
+          { title_en:'Embodied Intelligence', 
+            title_zh:'具身智能', 
+            href:'#research-systems',
+            desc_en:'针对有毒有害攻击的拒答、针对VLA的攻击与高效强化学习后训练安全对齐.',
+            desc_zh:'Toxic and harmful refusal, VLA-targeted attacks, and efficient reinforcement learning for post-training safety alignment.', 
+            tags:['VLA','RL']},
         ];
 
         const publications = [
@@ -222,11 +224,13 @@
           {date:'2025-10', text_en:'ElysiaAILab Established', text_zh:'ElysiaAILab 成立了。'}
         ];
 
-        const openings = [{ title_en:'Fall 2026 PhD Admissions & RA', title_zh:'2026秋博士招生 & RA',
-          body_en:'We are recruiting PHD/RA/Undergrad RAs/Interns in Vision-centric MLLM, long-text rendering, unified generation and understanding.',
-          body_zh:'我们招收博士/RA/本科生科研助理/实习生，方向含 Vision-centric MLLM、长文本渲染、统一生成与理解。',
-          contact_en:'Send CV to: jinpengwang@csu.edu.cn (subject includes [Application])',
-          contact_zh:'请发送简历至: jinpengwang@csu.edu.cn (标题包含【应聘】)'}];
+        const openings = [{ 
+          title_en:'Fall 2026 PhD Positions Open', 
+          title_zh:'2026秋博士机会寻找',
+          body_en:'I am actively seeking PhD opportunities.',
+          body_zh:'我正在寻找博士机会',
+          contact_en:'Send Info to: chuqi23@mails.jlu.edu.cn',
+          contact_zh:'请发送信息至: chuqi23@mails.jlu.edu.cn'}];
 
         // ===== utils =====
         function deriveThumb(link){ try{const u=new URL(link); if(u.hostname.includes('arxiv.org')) return 'https://upload.wikimedia.org/wikipedia/commons/9/95/ArXiv_logo_2022.svg';}catch(e){} return ''; }
@@ -560,7 +564,7 @@
                         <div className="text-xs muted mt-1 flex items-center gap-2">
                           {pick(o,'contact',lang)}
                           <button className="px-2 py-0.5 rounded border hover:bg-neutral-100"
-                                  onClick={()=>{navigator.clipboard.writeText('jinpengwang@csu.edu.cn'); const btn=event.currentTarget; const txt=btn.textContent; btn.textContent=I18N[lang].copied; setTimeout(()=>btn.textContent=I18N[lang].copy,1000);}}>
+                                  onClick={()=>{navigator.clipboard.writeText('chuqi23@mails.jlu.edu.cn'); const btn=event.currentTarget; const txt=btn.textContent; btn.textContent=I18N[lang].copied; setTimeout(()=>btn.textContent=I18N[lang].copy,1000);}}>
                             {I18N[lang].copy}
                           </button>
                         </div>
@@ -582,8 +586,8 @@
                   <Card>
                     <div className="grid md:grid-cols-3 gap-4 text-sm">
                       <div><div className="font-semibold">{T.contact_addr_label}</div><div className="muted">{T.contact_addr}</div></div>
-                      <div><div className="font-semibold">{T.contact_email_label}</div><div>jinpengwang@csu.edu.cn</div></div>
-                      <div><div className="font-semibold">{T.contact_social_label}</div><div className="muted">—</div></div>
+                      <div><div className="font-semibold">{T.contact_email_label}</div><div>chuqi23@mails.jlu.edu.cn</div></div>
+                      <div><div className="font-semibold">{T.contact_social_label}</div><div className="muted">TBD</div></div>
                     </div>
                   </Card>
                 </Section>
